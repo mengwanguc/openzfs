@@ -42,7 +42,6 @@
 /*
  * Vdev my_mirror kstats
  */
-static kstat_t *my_mirror_ksp = NULL;
 
 typedef struct my_mirror_stats {
 	kstat_named_t vdev_my_mirror_stat_rotating_linear;

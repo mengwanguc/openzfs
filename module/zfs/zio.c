@@ -57,7 +57,8 @@
  * I/O type descriptions
  * ==========================================================================
  */
-const char *zio_type_name[ZIO_TYPES] = {
+// We aer initializing 8 elements
+const char *zio_type_name[ZIO_TYPE_MLEC_WRITE_DATA] = {
 	/*
 	 * Note: Linux kernel thread name length is limited
 	 * so these names will differ from upstream open zfs.
@@ -1532,7 +1533,7 @@ zio_vdev_child_io(zio_t *pio, blkptr_t *bp, vdev_t *vd, uint64_t offset,
 		flags &= ~ZIO_FLAG_IO_ALLOCATING;
 	}
 
-	zfs_dbgmsg("Creating child zio of type %ld", type);
+	zfs_dbgmsg("Creating child zio of type %d", type);
 	zio = zio_create(pio, pio->io_spa, pio->io_txg, bp, data, size, size,
 					 done, private, type, priority, flags, vd, offset, &pio->io_bookmark,
 					 ZIO_STAGE_VDEV_IO_START >> 1, pipeline);
@@ -3987,7 +3988,7 @@ zio_vdev_io_start(zio_t *zio)
 
 		if (zio->io_type == ZIO_TYPE_WRITE || zio->io_type == ZIO_TYPE_MLEC_WRITE_DATA)
 		{
-			zfs_dbgmsg("Copying abd content in vdev_io_start to abuf, content %s", abd_to_buf(zio->io_abd));
+			zfs_dbgmsg("Copying abd content in vdev_io_start to abuf, content %s", (char *) abd_to_buf(zio->io_abd));
 			abd_copy(abuf, zio->io_abd, zio->io_size);
 			abd_zero_off(abuf, zio->io_size, asize - zio->io_size);
 		}

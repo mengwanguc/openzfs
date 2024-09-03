@@ -7443,28 +7443,26 @@ mlec_zfs_grab_sa_handle(objset_t *osp, uint64_t obj, sa_handle_t **hdlp,
 
 static int mlec_get_dn_fsize(dsl_dataset_t *dsl_dataset, uint64_t object_id, uint64_t *fsize, sa_handle_t **hdl, dmu_buf_t **db) {
 	// The size come from sa attributes
-	// sa_attr_type_t *sa_table;
-	// int error;
+	sa_attr_type_t *sa_table;
+	int error;
 
-	// error = mlec_zfs_sa_setup(dsl_dataset->ds_objset, &sa_table);
-	// if (error != 0) {
-	// 	return (error);
-	// }
+	error = mlec_zfs_sa_setup(dsl_dataset->ds_objset, &sa_table);
+	if (error != 0) {
+		return (error);
+	}
 		
 
-	// error = mlec_zfs_grab_sa_handle(dsl_dataset->ds_objset, object_id, hdl, db, FTAG);
-	// if (error != 0)
-	// 	return (error);
+	error = mlec_zfs_grab_sa_handle(dsl_dataset->ds_objset, object_id, hdl, db, FTAG);
+	if (error != 0)
+		return (error);
 
-	// sa_bulk_attr_t bulk[12];
-	// int idx = 0;
-	// SA_ADD_BULK_ATTR(bulk, idx, sa_table[ZPL_SIZE], NULL, fsize, 8);
+	sa_bulk_attr_t bulk[12];
+	int idx = 0;
+	SA_ADD_BULK_ATTR(bulk, idx, sa_table[ZPL_SIZE], NULL, fsize, 8);
 
-	// if (sa_bulk_lookup(*hdl, bulk, idx) != 0){
-	// 	return 1;
-	// }
-
-	*fsize = 256;
+	if (sa_bulk_lookup(*hdl, bulk, idx) != 0){
+		return 1;
+	}
 	
 	return 0;
 }
@@ -7619,19 +7617,19 @@ mlec_dump_objset(objset_t *os, nvlist_t *out)
 			nv_error += nvlist_add_string(attributes, "path", path);
 			
 			// Get the fsize
-			// uint64_t fsize;
-		// 	sa_handle_t *hdl;
-		// 	dmu_buf_t *db;
-		// 	if (mlec_get_dn_fsize(os->os_dsl_dataset, object, &fsize, &hdl, &db)) {
-		// 		// dnode_rele(dn, FTAG);
-		// 		// sa_handle_destroy(hdl);
-		// 		// sa_buf_rele(db, FTAG);
-		// 		return -1;
-		// 	}
-		// 	// sa_handle_destroy(hdl);
-		// 	// sa_buf_rele(db, FTAG);
+			uint64_t fsize;
+			sa_handle_t *hdl;
+			dmu_buf_t *db;
+			if (mlec_get_dn_fsize(os->os_dsl_dataset, object, &fsize, &hdl, &db)) {
+				dnode_rele(dn, FTAG);
+				sa_handle_destroy(hdl);
+				sa_buf_rele(db, FTAG);
+				return -1;
+			}
+			sa_handle_destroy(hdl);
+			sa_buf_rele(db, FTAG);
 
-			// nv_error += nvlist_add_int64(attributes, "fsize", fsize);
+			nv_error += nvlist_add_int64(attributes, "fsize", fsize);
 
 			// Get the failure information
 			int64_t child_status[vdev->vdev_children];
@@ -7641,8 +7639,8 @@ mlec_dump_objset(objset_t *os, nvlist_t *out)
 			info.nparity = 1;
 			info.r = 0;
 
-			// mlec_get_raidz_info(vdev, vdev->vdev_tsd, fsize, &info);
-			// zfs_get_vdev_children_status(vdev, child_status);
+			mlec_get_raidz_info(vdev, vdev->vdev_tsd, fsize, &info);
+			zfs_get_vdev_children_status(vdev, child_status);
 			
 			// Get child status
 			nv_error += nvlist_add_int64(attributes, "dcols", info.dcols);
@@ -7940,16 +7938,16 @@ zfs_ioctl_init(void)
 {
 	// MLEC stuff
 	zfs_ioctl_register("failed-chunks", ZFS_IOC_POOL_FAILED_CHUNKS,
-						zfs_ioctl_failed_chunks, zfs_pool_failed_chunks_sec_policy, NO_NAME,
+						zfs_ioctl_failed_chunks, zfs_pool_failed_chunks_sec_policy, POOL_NAME,
 						POOL_CHECK_NONE, B_FALSE, B_TRUE, zfs_keys_failed_chunks, ARRAY_SIZE(zfs_keys_failed_chunks));
 	zfs_ioctl_register("all-dnode", ZFS_IOC_POOL_ALL_DNODE,
-						zfs_ioc_pool_all_dnode, zfs_pool_all_dnode_sec_policy, NO_NAME,
+						zfs_ioc_pool_all_dnode, zfs_pool_all_dnode_sec_policy, POOL_NAME,
 						POOL_CHECK_NONE, B_FALSE, B_TRUE, zfs_keys_all_dnode, ARRAY_SIZE(zfs_keys_all_dnode));
 	zfs_ioctl_register("easy-scrub", ZFS_IOC_POOL_EASY_SCAN,
-						zfs_ioc_pool_easy_scan, zfs_pool_easy_scan_sec_policy , NO_NAME,
+						zfs_ioc_pool_easy_scan, zfs_pool_easy_scan_sec_policy , POOL_NAME,
 					   POOL_CHECK_NONE, B_FALSE, B_TRUE, zfs_keys_easy_scan, ARRAY_SIZE(zfs_keys_easy_scan));
 	zfs_ioctl_register("mlec-receive-data", ZFS_MLEC_RECEIVE_DATA,
-					   zfs_mlec_receive_repair_data, zfs_mlec_receive_repair_data_secpolicy, NO_NAME,
+					   zfs_mlec_receive_repair_data, zfs_mlec_receive_repair_data_secpolicy, POOL_NAME,
 					   POOL_CHECK_NONE, B_FALSE, B_TRUE, zfs_keys_mlec_receive_repair_data, ARRAY_SIZE(zfs_keys_mlec_receive_repair_data));
 
 	zfs_ioctl_register("snapshot", ZFS_IOC_SNAPSHOT,

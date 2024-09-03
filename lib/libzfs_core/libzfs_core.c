@@ -1648,18 +1648,18 @@ lzc_get_bootenv(const char *pool, nvlist_t **outnvl)
 * A test method for MLEC impl
 */
 int
-lzc_mlec_receive_data(const char *pool, const nvlist_t *input) 
+lzc_mlec_receive_data(const char *pool, nvlist_t *input) 
 {
 	return (lzc_ioctl(ZFS_MLEC_RECEIVE_DATA, pool, input, NULL));
 }
 
-int lzc_mlec_get_failed_chunks(const char *pool, const nvlist_t *input, nvlist_t **output) {
+int lzc_mlec_get_failed_chunks(const char *pool, nvlist_t *input, nvlist_t **output) {
 	return (lzc_ioctl(ZFS_IOC_POOL_FAILED_CHUNKS, pool, input, output));
 }
 
 /**
  * MLEC get all dnode
  */
-int lzc_mlec_get_all_dnode(const char *pool, const nvlist_t *input, const nvlist_t **output) {
+int lzc_mlec_get_all_dnode(const char *pool, nvlist_t *input, nvlist_t **output) {
 	return (lzc_ioctl(ZFS_IOC_POOL_ALL_DNODE, pool, input, output));
 }

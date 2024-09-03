@@ -2599,7 +2599,7 @@ zpool_get_failed_chunks(zpool_handle_t *zhp, int64_t objset_id, int64_t object_i
 	int error = 0;
 	error = nvlist_unpack((char *)zc.zc_nvlist_dst, zc.zc_nvlist_dst_size, &out, 0);
 	if (error) {
-		printf("Error unpacking\n");
+		printf("Error unpacking %d\n", error);
 	}
 
 	// nvpair_t *pair;
@@ -2641,10 +2641,10 @@ zpool_get_all_dnode(zpool_handle_t *zhp) {
 	int error = 0;
 	error = nvlist_unpack((char *)zc.zc_nvlist_dst, zc.zc_nvlist_dst_size, &out, 0);
 	if (error) {
-		printf("Error unpacking\n");
+		printf("Get all dnode error unpacking %d\n", error);
 	}
 
-	nvpair_t *nvp;
+	nvpair_t *nvp = NULL;
 	while ((nvp = nvlist_next_nvpair(out, nvp)) != NULL) {
 		printf("Datanode name %s\n", nvpair_name(nvp));
 		// Get the nested nvlist attributes
@@ -2695,7 +2695,7 @@ zpool_easy_scan(zpool_handle_t *zhp)
 	int error = 0;
 	error = nvlist_unpack((char *)zc.zc_nvlist_dst, zc.zc_nvlist_dst_size, &out, 0);
 	if (error) {
-		printf("Error unpacking\n");
+		printf("Error unpacking %d\n", error);
 	}
 
 	int64_t *child_status;

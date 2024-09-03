@@ -1546,14 +1546,14 @@ vdev_raidz_io_verify(vdev_t *vd, raidz_row_t *rr, int col)
 static void vdev_raidz_mlec_write(zio_t * zio, raidz_row_t *rr, uint64_t ashift) {
 	uint64_t col_idx = zio->mlec_write_col_idx;
 	vdev_t *vd = zio->io_vd;
-	raidz_map_t *rm = zio->io_vsd;
+	// raidz_map_t *rm = zio->io_vsd;
 	raidz_col_t *rc = &rr->rr_col[col_idx];
 
 	zfs_dbgmsg("vdev_raidz_mlec_write called with col_idx %ld", col_idx);
 	zfs_dbgmsg("Calling child %ld with offset %ld, and rc size %ld", col_idx, rc->rc_offset, rc->rc_size);
 
 	// Test print the abd content
-	zfs_dbgmsg("The abd content is %s with size %ld", zio->io_abd, zio->io_size);
+	zfs_dbgmsg("The abd content is %s with size %ld", (char *) abd_to_buf(zio->io_abd), zio->io_size);
 	zio_nowait(zio_vdev_child_io(zio, zio->mlec_write_target, vd->vdev_child[col_idx], rc->rc_offset, rc->rc_abd, rc->rc_size, zio->io_type, zio->io_priority, 0, NULL, rc));
 }
 
@@ -1637,7 +1637,7 @@ vdev_raidz_io_start_read(zio_t *zio, raidz_row_t *rr)
 			continue;
 		}
 
-		zfs_dbgmsg("Reading column %ld, devidx %ld", c, rc->rc_devidx);
+		zfs_dbgmsg("Reading column %d, devidx %ld", c, rc->rc_devidx);
 		if (c >= rr->rr_firstdatacol || rr->rr_missingdata > 0 ||
 		    (zio->io_flags & (ZIO_FLAG_SCRUB | ZIO_FLAG_RESILVER))) {
 			zio_nowait(zio_vdev_child_io(zio, NULL, cvd,
@@ -1671,7 +1671,7 @@ vdev_raidz_io_start(zio_t *zio)
 	vdev_t *vd = zio->io_vd;
 	vdev_t *tvd = vd->vdev_top;
 	vdev_raidz_t *vdrz = vd->vdev_tsd;
-	zfs_dbgmsg("vdev_raidz_io_start, logical width %ld, n parity %ld", vdrz->vd_logical_width, vdrz->vd_nparity);
+	zfs_dbgmsg("vdev_raidz_io_start, logical width %d, n parity %d", vdrz->vd_logical_width, vdrz->vd_nparity);
 
 
 	zfs_dbgmsg("allocating raidz map");

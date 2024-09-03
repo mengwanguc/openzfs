@@ -5112,7 +5112,7 @@ vdev_propagate_state(vdev_t *vd)
 void
 vdev_set_state(vdev_t *vd, boolean_t isopen, vdev_state_t state, vdev_aux_t aux)
 {
-	zfs_dbgmsg("vdev_set_state called with state %ld", state);
+	zfs_dbgmsg("vdev_set_state called with state %d", state);
 	uint64_t save_state;
 	spa_t *spa = vd->vdev_spa;
 
