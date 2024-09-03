@@ -7490,15 +7490,16 @@ static int mlec_get_raidz_info(vdev_t *top, vdev_raidz_t *vrt, uint64_t fsize, r
 	uint64_t nparity = vrt->vd_nparity;
 	uint64_t ashift = top->vdev_ashift;
 
-	uint64_t b = 0;
+	// uint64_t b = 0;
 	/* The zio's size in units of the vdev's minimum sector size. */
 	uint64_t s = fsize >> ashift;
 	/* The first column for this stripe. */
-	uint64_t f = b % dcols;
+	// uint64_t f = b % dcols;
 	/* The starting byte offset on each child vdev. */
 	// Question? why is this / dcols, not (dcols - 1)? 
-	uint64_t o = (b / dcols) << ashift;
-	uint64_t q, r, c, bc, col, acols, scols, tot;
+	// uint64_t o = (b / dcols) << ashift;
+	uint64_t q, r, bc, acols, scols, tot;
+	// uint64_t col, c;
 
 	/*
 	 * "Quotient": The number of data sectors for this stripe on all but
@@ -7570,7 +7571,7 @@ zfs_get_vdev_children_status(vdev_t *vdev, int64_t *child_status) {
 static int
 mlec_dump_objset(objset_t *os, nvlist_t *out)
 {
-	zfs_dbgmsg("mlec_dump_objset called on objset %ld", dmu_objset_id(os));
+	zfs_dbgmsg("mlec_dump_objset called on objset %llu", (u_longlong_t)dmu_objset_id(os));
 	uint64_t object;
 	char osname[ZFS_MAX_DATASET_NAME_LEN];
 	int error;
@@ -7587,16 +7588,16 @@ mlec_dump_objset(objset_t *os, nvlist_t *out)
 	object = 0;
 	while ((error = dmu_object_next(os, &object, B_FALSE, 0)) == 0) {
 		// Check whether dnode is a plain file
-		zfs_dbgmsg("dumping object %ld", object);
+		zfs_dbgmsg("dumping object %llu", (u_longlong_t)object);
 		dnode_t *dn;
 		dnode_hold(os, object, FTAG, &dn);
-		zfs_dbgmsg("dnode ref count after hold in dump objset %ld", dn->dn_holds.rc_count);
+		zfs_dbgmsg("dnode ref count after hold in dump objset %llu", (u_longlong_t)dn->dn_holds.rc_count);
 		
 		if (dn->dn_type == DMU_OT_PLAIN_FILE_CONTENTS) {
 			char path[MAXPATHLEN * 2];
 			int obj_to_path_error = zfs_obj_to_path(os, object, path, sizeof(path));
 			if (obj_to_path_error) {
-				zfs_dbgmsg("Error retrieving dnode path, error %ld", obj_to_path_error);
+				zfs_dbgmsg("Error retrieving dnode path, error %d", obj_to_path_error);
 			}
 			zfs_dbgmsg("dnode %lld:%lld, type %d, path %s", dmu_objset_id(os), object, dn->dn_type, path);
 
@@ -7669,7 +7670,7 @@ mlec_dump_objset(objset_t *os, nvlist_t *out)
 		}
 		
 		dnode_rele(dn, FTAG);
-		zfs_dbgmsg("dnode ref count after release in dump objset %ld", dn->dn_holds.rc_count);
+		zfs_dbgmsg("dnode ref count after release in dump objset %llu", (u_longlong_t)dn->dn_holds.rc_count);
 	}
 
 	return num_object;
@@ -7697,16 +7698,16 @@ mlec_dump_one_objset(const char *dsname, void *arg)
 	return (0);
 }
 
-static int mlec_get_dsl_dataset(spa_t *spa, uint64_t objset_id, dsl_dataset_t **dsl_dataset) {
-	if (dsl_dataset_hold_obj(spa->spa_dsl_pool, objset_id, FTAG, dsl_dataset))
-	{
-		zfs_dbgmsg("dsl_dataset open failed");
-		spa_close(spa, FTAG);
-		return 1;
-	}
+// static int mlec_get_dsl_dataset(spa_t *spa, uint64_t objset_id, dsl_dataset_t **dsl_dataset) {
+// 	if (dsl_dataset_hold_obj(spa->spa_dsl_pool, objset_id, FTAG, dsl_dataset))
+// 	{
+// 		zfs_dbgmsg("dsl_dataset open failed");
+// 		spa_close(spa, FTAG);
+// 		return 1;
+// 	}
 
-	return 0;
-}
+// 	return 0;
+// }
 
 static int
 zfs_ioctl_failed_chunks(const char *poolname, nvlist_t *innvl, nvlist_t *outnvl)
@@ -7728,7 +7729,7 @@ zfs_ioctl_failed_chunks(const char *poolname, nvlist_t *innvl, nvlist_t *outnvl)
 	zfs_dbgmsg("vdev ashift %lld, sector size %d", top->vdev_ashift, 1 << top->vdev_ashift);
 	
 	// Get the number of chunks, and number of stripes
-	int innvl_err = 0;
+	// int innvl_err = 0;
 
 	objset_t *objset;
 	dmu_objset_hold(poolname, FTAG, &objset);
@@ -7737,7 +7738,7 @@ zfs_ioctl_failed_chunks(const char *poolname, nvlist_t *innvl, nvlist_t *outnvl)
 	 * #2. Get all the dnode on the drive, while dumping the dnode
 	 */
 	int num_object = mlec_dump_objset(objset, outnvl);
-	zfs_dbgmsg("mlec_dump_objset contains %ld objects", num_object);
+	zfs_dbgmsg("mlec_dump_objset contains %d objects", num_object);
 
 	
 	dmu_objset_rele(objset, FTAG);

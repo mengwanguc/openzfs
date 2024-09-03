@@ -181,7 +181,7 @@ zfsdev_release(struct inode *ino, struct file *filp)
 static long
 zfsdev_ioctl(struct file *filp, unsigned cmd, unsigned long arg)
 {\
-	zfs_dbgmsg("zfsdev_ioctl() called jaja with cmd %ld\n", cmd);
+	zfs_dbgmsg("zfsdev_ioctl() called with cmd %d\n", cmd);
 	uint_t vecnum;
 	zfs_cmd_t *zc;
 	int error, rc;

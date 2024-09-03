@@ -198,9 +198,9 @@ vdev_raidz_map_alloc(zio_t *zio, uint64_t ashift, uint64_t dcols,
 	uint64_t o = (b / dcols) << ashift;
 	uint64_t q, r, c, bc, col, acols, scols, coff, devidx, asize, tot;
 
-	zfs_dbgmsg("zio size %ld", zio->io_size);
-	zfs_dbgmsg("dcols, nparity: %ld, %ld", dcols, nparity);
-	zfs_dbgmsg("b, s, f, o: %ld, %ld, %ld, %ld", b, s, f, o);
+	zfs_dbgmsg("zio size %llu", (u_longlong_t)zio->io_size);
+	zfs_dbgmsg("dcols, nparity: %llu, %llu", (u_longlong_t)dcols, (u_longlong_t)nparity);
+	zfs_dbgmsg("b, s, f, o: %llu, %llu, %llu, %llu", (u_longlong_t)b, (u_longlong_t)s, (u_longlong_t)f, (u_longlong_t)o);
 	zfs_dbgmsg("allocating row");
 	raidz_map_t *rm =
 	    kmem_zalloc(offsetof(raidz_map_t, rm_row[1]), KM_SLEEP);
@@ -263,7 +263,7 @@ vdev_raidz_map_alloc(zio_t *zio, uint64_t ashift, uint64_t dcols,
 
 	asize = 0;
 
-	zfs_dbgmsg("Total number of columns %ld", scols);
+	zfs_dbgmsg("Total number of columns %llu", (u_longlong_t)scols);
 	for (c = 0; c < scols; c++) {
 		raidz_col_t *rc = &rr->rr_col[c];
 		col = f + c;
@@ -290,7 +290,7 @@ vdev_raidz_map_alloc(zio_t *zio, uint64_t ashift, uint64_t dcols,
 		else
 			rc->rc_size = q << ashift;
 
-		zfs_dbgmsg("column %ld has rc_size %ld", c, rc->rc_size);
+		zfs_dbgmsg("column %llu has rc_size %llu", (u_longlong_t)c, (u_longlong_t)rc->rc_size);
 		asize += rc->rc_size;
 	}
 
@@ -301,7 +301,7 @@ vdev_raidz_map_alloc(zio_t *zio, uint64_t ashift, uint64_t dcols,
 	rm->rm_skipstart = bc;
 
 	for (c = 0; c < rr->rr_firstdatacol; c++) {
-		zfs_dbgmsg("Allocating abd of size %ld", rr->rr_col[c].rc_size);
+		zfs_dbgmsg("Allocating abd of size %llu", (u_longlong_t)rr->rr_col[c].rc_size);
 		rr->rr_col[c].rc_abd =
 		    abd_alloc_linear(rr->rr_col[c].rc_size, B_FALSE);
 	}
@@ -1549,11 +1549,11 @@ static void vdev_raidz_mlec_write(zio_t * zio, raidz_row_t *rr, uint64_t ashift)
 	// raidz_map_t *rm = zio->io_vsd;
 	raidz_col_t *rc = &rr->rr_col[col_idx];
 
-	zfs_dbgmsg("vdev_raidz_mlec_write called with col_idx %ld", col_idx);
-	zfs_dbgmsg("Calling child %ld with offset %ld, and rc size %ld", col_idx, rc->rc_offset, rc->rc_size);
+	zfs_dbgmsg("vdev_raidz_mlec_write called with col_idx %llu", (u_longlong_t)col_idx);
+	zfs_dbgmsg("Calling child %llu with offset %llu, and rc size %llu", (u_longlong_t)col_idx, (u_longlong_t)rc->rc_offset, (u_longlong_t)rc->rc_size);
 
 	// Test print the abd content
-	zfs_dbgmsg("The abd content is %s with size %ld", (char *) abd_to_buf(zio->io_abd), zio->io_size);
+	zfs_dbgmsg("The abd content is %s with size %llu", (char *) abd_to_buf(zio->io_abd), (u_longlong_t)zio->io_size);
 	zio_nowait(zio_vdev_child_io(zio, zio->mlec_write_target, vd->vdev_child[col_idx], rc->rc_offset, rc->rc_abd, rc->rc_size, zio->io_type, zio->io_priority, 0, NULL, rc));
 }
 
@@ -1637,7 +1637,7 @@ vdev_raidz_io_start_read(zio_t *zio, raidz_row_t *rr)
 			continue;
 		}
 
-		zfs_dbgmsg("Reading column %d, devidx %ld", c, rc->rc_devidx);
+		zfs_dbgmsg("Reading column %d, devidx %llu", c, (u_longlong_t) rc->rc_devidx);
 		if (c >= rr->rr_firstdatacol || rr->rr_missingdata > 0 ||
 		    (zio->io_flags & (ZIO_FLAG_SCRUB | ZIO_FLAG_RESILVER))) {
 			zio_nowait(zio_vdev_child_io(zio, NULL, cvd,

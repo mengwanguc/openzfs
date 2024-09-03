@@ -2484,7 +2484,7 @@ vdev_my_raidz_init(spa_t *spa, nvlist_t *nv, void **tsd)
 
 	zfs_dbgmsg("%d", error);
 	if (nvlist_lookup_uint64(nv, ZPOOL_CONFIG_NPARITY, &nparity) == 0) {
-		zfs_dbgmsg("parity level, %ld", nparity);
+		zfs_dbgmsg("parity level, %llu", (u_longlong_t)nparity);
 		if (nparity == 0 || nparity > VDEV_RAIDZ_MAXPARITY)
 			return (SET_ERROR(EINVAL));
 
