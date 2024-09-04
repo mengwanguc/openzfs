@@ -7567,11 +7567,18 @@ zfs_get_vdev_children_status(vdev_t *vdev, int64_t *child_status) {
 		zfs_dbgmsg("Acquired SCL_STATE_ALL writer lock on vdev");
 
 		vdev_t *vd = vdev->vdev_child[i];
+
+		// Recreate the content of vdev_open
+
 		vd->vdev_open_thread = curthread;
+		vd->vdev_validate_thread = curthread;
 		zfs_dbgmsg("Current vdev state %llu", (longlong_t) vd->vdev_state);
-		vdev_close(vd);
-		child_status[i] = vdev_open(vd);
+		int error = vdev_validate(vd);
+		child_status[i] = error;
+		// vdev_close(vd);
+		// child_status[i] = vdev_reopen(vd);
 		vd->vdev_open_thread = NULL;
+		vd->vdev_validate_thread = NULL;
 
 		// spa_config_exit(vdev->vdev_spa, SCL_STATE_ALL, FTAG);
 		zfs_dbgmsg("child status %d is %lld", i, child_status[i]);
