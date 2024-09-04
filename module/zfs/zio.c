@@ -1483,6 +1483,7 @@ zio_vdev_child_io(zio_t *pio, blkptr_t *bp, vdev_t *vd, uint64_t offset,
 	 * The only exceptions are i/os that we don't care about
 	 * (OPTIONAL or REPAIR).
 	 */
+	zfs_dbgmsg("zio flag is %d", flags);
 	ASSERT((flags & ZIO_FLAG_OPTIONAL) || (flags & ZIO_FLAG_IO_REPAIR) ||
 		   done != NULL);
 
