@@ -151,7 +151,7 @@ static const char *const zio_taskq_types[ZIO_TASKQ_TYPES] = {
  * and interrupt) and then to reserve threads for ZIO_PRIORITY_NOW I/Os that
  * need to be handled with minimum delay.
  */
-const zio_taskq_info_t zio_taskqs[ZIO_TYPES][ZIO_TASKQ_TYPES] = {
+const zio_taskq_info_t zio_taskqs[ZIO_TYPE_MLEC_WRITE_DATA][ZIO_TASKQ_TYPES] = {
 	/* ISSUE	ISSUE_HIGH	INTR		INTR_HIGH */
 	{ ZTI_ONE,	ZTI_NULL,	ZTI_ONE,	ZTI_NULL }, /* NULL */
 	{ ZTI_N(8),	ZTI_NULL,	ZTI_SCALE,	ZTI_NULL }, /* READ */
@@ -160,6 +160,7 @@ const zio_taskq_info_t zio_taskqs[ZIO_TYPES][ZIO_TASKQ_TYPES] = {
 	{ ZTI_ONE,	ZTI_NULL,	ZTI_ONE,	ZTI_NULL }, /* CLAIM */
 	{ ZTI_ONE,	ZTI_NULL,	ZTI_ONE,	ZTI_NULL }, /* IOCTL */
 	{ ZTI_N(4),	ZTI_NULL,	ZTI_ONE,	ZTI_NULL }, /* TRIM */
+	{ ZTI_ONE,	ZTI_NULL,	ZTI_ONE,	ZTI_NULL }  /* MLEC stuff */
 };
 
 static void spa_sync_version(void *arg, dmu_tx_t *tx);
@@ -1121,18 +1122,21 @@ void
 spa_taskq_dispatch_ent(spa_t *spa, zio_type_t t, zio_taskq_type_t q,
     task_func_t *func, void *arg, uint_t flags, taskq_ent_t *ent)
 {
+	zfs_dbgmsg("spa_taskq_dispatch called");
 	spa_taskqs_t *tqs = &spa->spa_zio_taskq[t][q];
 	taskq_t *tq;
 
 	ASSERT3P(tqs->stqs_taskq, !=, NULL);
 	ASSERT3U(tqs->stqs_count, !=, 0);
 
+	zfs_dbgmsg("spa_taskq_dispatch passed assertion with stqs_count %llu", (longlong_t) tqs->stqs_count);
 	if (tqs->stqs_count == 1) {
 		tq = tqs->stqs_taskq[0];
 	} else {
 		tq = tqs->stqs_taskq[((uint64_t)gethrtime()) % tqs->stqs_count];
 	}
 
+	zfs_dbgmsg("Dispatching taskq ent");
 	taskq_dispatch_ent(tq, func, arg, flags, ent);
 }
 
@@ -1164,7 +1168,7 @@ spa_taskq_dispatch_sync(spa_t *spa, zio_type_t t, zio_taskq_type_t q,
 static void
 spa_create_zio_taskqs(spa_t *spa)
 {
-	for (int t = 0; t < ZIO_TYPES; t++) {
+	for (int t = 0; t < ZIO_TYPE_MLEC_WRITE_DATA; t++) {
 		for (int q = 0; q < ZIO_TASKQ_TYPES; q++) {
 			spa_taskqs_init(spa, t, q);
 		}
@@ -1396,7 +1400,7 @@ spa_deactivate(spa_t *spa)
 
 	taskq_cancel_id(system_delay_taskq, spa->spa_deadman_tqid);
 
-	for (int t = 0; t < ZIO_TYPES; t++) {
+	for (int t = 0; t < ZIO_TYPE_MLEC_WRITE_DATA; t++) {
 		for (int q = 0; q < ZIO_TASKQ_TYPES; q++) {
 			spa_taskqs_fini(spa, t, q);
 		}

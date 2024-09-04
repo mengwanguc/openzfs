@@ -1108,7 +1108,7 @@ extern "C"
  * order to keep subsequent members at their known fixed offsets.  When
  * adding a new field it must be added to the end the structure.
  */
-#define VS_ZIO_TYPES 6
+#define VS_ZIO_TYPES 7
 
 	typedef struct vdev_stat
 	{
@@ -1188,10 +1188,10 @@ extern "C"
 								[VDEV_L_HISTO_BUCKETS];
 
 		/* Total ZIO latency (ns).  Includes queuing and disk access time */
-		uint64_t vsx_total_histo[ZIO_TYPES][VDEV_L_HISTO_BUCKETS];
+		uint64_t vsx_total_histo[ZIO_TYPE_MLEC_WRITE_DATA][VDEV_L_HISTO_BUCKETS];
 
 		/* Amount of time to read/write the disk (ns) */
-		uint64_t vsx_disk_histo[ZIO_TYPES][VDEV_L_HISTO_BUCKETS];
+		uint64_t vsx_disk_histo[ZIO_TYPE_MLEC_WRITE_DATA][VDEV_L_HISTO_BUCKETS];
 
 		/* "lookup the bucket for a value" histogram macros */
 #define HISTO(val, buckets) (val != 0 ? MIN(highbit64(val) - 1, \

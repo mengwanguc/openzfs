@@ -1483,6 +1483,7 @@ zio_vdev_child_io(zio_t *pio, blkptr_t *bp, vdev_t *vd, uint64_t offset,
 	 * The only exceptions are i/os that we don't care about
 	 * (OPTIONAL or REPAIR).
 	 */
+	zfs_dbgmsg("zio flag is %d", flags);
 	ASSERT((flags & ZIO_FLAG_OPTIONAL) || (flags & ZIO_FLAG_IO_REPAIR) ||
 		   done != NULL);
 
@@ -2020,7 +2021,7 @@ zio_taskq_member(zio_t *zio, zio_taskq_type_t q)
 
 	taskq_t *tq = taskq_of_curthread();
 
-	for (zio_type_t t = 0; t < ZIO_TYPES; t++)
+	for (zio_type_t t = 0; t < ZIO_TYPE_MLEC_WRITE_DATA; t++)
 	{
 		spa_taskqs_t *tqs = &spa->spa_zio_taskq[t][q];
 		uint_t i;
@@ -2720,12 +2721,13 @@ zio_claim_gang(zio_t *pio, blkptr_t *bp, zio_gang_node_t *gn, abd_t *data,
 					  NULL, NULL, ZIO_GANG_CHILD_FLAGS(pio)));
 }
 
-static zio_gang_issue_func_t *zio_gang_issue_func[ZIO_TYPES] = {
+static zio_gang_issue_func_t *zio_gang_issue_func[ZIO_TYPE_MLEC_WRITE_DATA] = {
 	NULL,
 	zio_read_gang,
 	zio_rewrite_gang,
 	zio_free_gang,
 	zio_claim_gang,
+	NULL,
 	NULL};
 
 static void zio_gang_tree_assemble_done(zio_t *zio);

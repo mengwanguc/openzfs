@@ -1554,7 +1554,7 @@ static void vdev_raidz_mlec_write(zio_t * zio, raidz_row_t *rr, uint64_t ashift)
 
 	// Test print the abd content
 	zfs_dbgmsg("The abd content is %s with size %llu", (char *) abd_to_buf(zio->io_abd), (u_longlong_t)zio->io_size);
-	zio_nowait(zio_vdev_child_io(zio, zio->mlec_write_target, vd->vdev_child[col_idx], rc->rc_offset, rc->rc_abd, rc->rc_size, zio->io_type, zio->io_priority, 0, NULL, rc));
+	zio_nowait(zio_vdev_child_io(zio, zio->mlec_write_target, vd->vdev_child[col_idx], rc->rc_offset, rc->rc_abd, rc->rc_size, zio->io_type, zio->io_priority, zio->io_flags, NULL, rc));
 }
 
 static void

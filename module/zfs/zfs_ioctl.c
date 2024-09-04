@@ -7567,11 +7567,18 @@ zfs_get_vdev_children_status(vdev_t *vdev, int64_t *child_status) {
 		zfs_dbgmsg("Acquired SCL_STATE_ALL writer lock on vdev");
 
 		vdev_t *vd = vdev->vdev_child[i];
+
+		// Recreate the content of vdev_open
+
 		vd->vdev_open_thread = curthread;
+		vd->vdev_validate_thread = curthread;
 		zfs_dbgmsg("Current vdev state %llu", (longlong_t) vd->vdev_state);
-		vdev_close(vd);
-		child_status[i] = vdev_open(vd);
+		int error = vdev_validate(vd);
+		child_status[i] = error;
+		// vdev_close(vd);
+		// child_status[i] = vdev_reopen(vd);
 		vd->vdev_open_thread = NULL;
+		vd->vdev_validate_thread = NULL;
 
 		// spa_config_exit(vdev->vdev_spa, SCL_STATE_ALL, FTAG);
 		zfs_dbgmsg("child status %d is %lld", i, child_status[i]);
@@ -7747,6 +7754,9 @@ zfs_ioctl_failed_chunks(const char *poolname, nvlist_t *innvl, nvlist_t *outnvl)
 		return 2;
 	}
 
+	// Acquire configuration reader
+	spa_config_enter(spa, SCL_ALL, FTAG, RW_READER);
+
 	/**
 	 * #1. Get the top vdev and dsl dataset
 	 */
@@ -7769,6 +7779,7 @@ zfs_ioctl_failed_chunks(const char *poolname, nvlist_t *innvl, nvlist_t *outnvl)
 
 	
 	dmu_objset_rele(objset, FTAG);
+	spa_config_exit(spa, SCL_ALL, FTAG);
 	spa_close(spa, FTAG);
 
 	return 0;
@@ -7828,6 +7839,8 @@ zfs_ioc_pool_easy_scan(const char *poolname, nvlist_t *innvl, nvlist_t *outnvl)
 		return 2;
 	}
 
+	spa_config_enter(spa, SCL_ALL, FTAG, RW_READER);
+
 	vdev_t *top_vdev = vdev_lookup_top(spa, 0);
 	int64_t child_status[top_vdev->vdev_children];
 
@@ -7836,6 +7849,7 @@ zfs_ioc_pool_easy_scan(const char *poolname, nvlist_t *innvl, nvlist_t *outnvl)
 	nvlist_add_int64_array(outnvl, "children_status", child_status, top_vdev->vdev_children);
 	nvlist_add_int64(outnvl, "children", top_vdev->vdev_children);
 
+	spa_config_exit(spa, SCL_ALL, FTAG);
 	spa_close(spa, FTAG);
 
 	return 0;
@@ -7896,6 +7910,9 @@ zfs_mlec_receive_repair_data(const char *poolname, nvlist_t *innvl, nvlist_t *ou
 	spa_t *spa;
 	spa_open(poolname, &spa, FTAG);
 
+	// Acquire the spa read config lock
+	spa_config_enter(spa, SCL_ALL, FTAG, RW_READER);
+
 	// 3. Find the vdev
 	vdev_t *vdev_top = vdev_lookup_top(spa, 0);
 	zfs_dbgmsg("Found the vdev %s, number of children %lld, first child path %s",
@@ -7904,7 +7921,14 @@ zfs_mlec_receive_repair_data(const char *poolname, nvlist_t *innvl, nvlist_t *ou
 			   vdev_top->vdev_child[0]->vdev_physpath);
 
 	// 3. Find the dnode that is associated with the input data
+	dsl_pool_t *dsl_pool;
 	dsl_dataset_t *dsl_dataset;
+	if (dsl_pool_hold(poolname, FTAG, &dsl_pool)) {
+		zfs_dbgmsg("dsl_pool hold failed");
+		spa_close(spa, FTAG);
+		return 1;
+	}
+
 	if (dsl_dataset_hold_obj(spa->spa_dsl_pool, objset_id, FTAG, &dsl_dataset))
 	{
 		zfs_dbgmsg("dsl_dataset open failed");
@@ -7926,18 +7950,19 @@ zfs_mlec_receive_repair_data(const char *poolname, nvlist_t *innvl, nvlist_t *ou
 	blkptr_t blk = dnode_repair->dn_phys->dn_blkptr[blk_id];
 
 	// 4. Get the binary data into abd
-	abd_t *repair_adb = abd_alloc_for_io(retrieved_data_size, B_FALSE);
+	// Linear abd is required for adb_to_buf
+	abd_t *repair_adb = abd_alloc_linear(retrieved_data_size, B_FALSE);
 	abd_copy_from_buf(repair_adb, retrieved_data, retrieved_data_size);
 
 	// 5. We will use the rewrite pipeline
 	// zio_t *repair_zio = zio_rewrite(NULL, spa, 0, &blk, repair_adb, retrieved_data_size, NULL, NULL, ZIO_PRIORITY_NOW, ZIO_FLAG_CANFAIL, NULL);
 	// The old ioctl pipeline impl
-	zio_t *repair_pio = zio_root(spa, NULL, NULL, ZIO_FLAG_CANFAIL);
+	zio_t *repair_pio = zio_root(spa, NULL, NULL, ZIO_FLAG_IO_REPAIR);
 	repair_pio->io_type = ZIO_TYPE_MLEC_WRITE_DATA;
 
 	// zio_t *repair_zio = zio_write_phys(repair_pio, vdev_top, 0, retrieved_data_size, repair_adb, 0, NULL, NULL, ZIO_PRIORITY_NOW, ZIO_FLAG_CANFAIL, NULL)
 
-	zio_t *repair_zio = zio_ioctl(repair_pio, spa, vdev_top, 0, NULL, NULL, ZIO_FLAG_CANFAIL);
+	zio_t *repair_zio = zio_ioctl(repair_pio, spa, vdev_top, 0, NULL, NULL, ZIO_FLAG_IO_REPAIR);
 	repair_zio->io_abd = repair_adb;
 	repair_zio->io_size = retrieved_data_size;
 	repair_zio->mlec_write_target = &blk;
@@ -7951,7 +7976,10 @@ zfs_mlec_receive_repair_data(const char *poolname, nvlist_t *innvl, nvlist_t *ou
 	// Close the spa, otherwise the pool is always busy
 	abd_free(repair_adb);
 	dnode_rele(dnode_repair, FTAG);
+	dsl_pool_rele(dsl_pool, FTAG);
 	dsl_dataset_rele(dsl_dataset, FTAG);
+	
+	spa_config_exit(spa, SCL_ALL, FTAG);
 	spa_close(spa, FTAG);
 
 	return 0;
