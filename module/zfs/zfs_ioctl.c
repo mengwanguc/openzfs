@@ -7839,6 +7839,8 @@ zfs_ioc_pool_easy_scan(const char *poolname, nvlist_t *innvl, nvlist_t *outnvl)
 		return 2;
 	}
 
+	spa_config_enter(spa, SCL_ALL, FTAG, RW_READER);
+
 	vdev_t *top_vdev = vdev_lookup_top(spa, 0);
 	int64_t child_status[top_vdev->vdev_children];
 
@@ -7847,6 +7849,7 @@ zfs_ioc_pool_easy_scan(const char *poolname, nvlist_t *innvl, nvlist_t *outnvl)
 	nvlist_add_int64_array(outnvl, "children_status", child_status, top_vdev->vdev_children);
 	nvlist_add_int64(outnvl, "children", top_vdev->vdev_children);
 
+	spa_config_exit(spa, SCL_ALL, FTAG);
 	spa_close(spa, FTAG);
 
 	return 0;
