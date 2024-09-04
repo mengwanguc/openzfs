@@ -5250,6 +5250,7 @@ spa_open_common(const char *pool, spa_t **spapp, void *tag, nvlist_t *nvpolicy,
 	}
 
 	if (locked) {
+		zfs_dbgmsg("spa_lookup lock is held");
 		spa->spa_last_open_failed = 0;
 		spa->spa_last_ubsync_txg = 0;
 		spa->spa_load_txg = 0;
@@ -5259,6 +5260,7 @@ spa_open_common(const char *pool, spa_t **spapp, void *tag, nvlist_t *nvpolicy,
 	if (firstopen)
 		zvol_create_minors_recursive(spa_name(spa));
 
+	zfs_dbgmsg("spa_open reference acquired");
 	*spapp = spa;
 
 	return (0);

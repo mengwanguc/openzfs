@@ -7555,14 +7555,27 @@ static int mlec_get_raidz_info(vdev_t *top, vdev_raidz_t *vrt, uint64_t fsize, r
 
 static int
 zfs_get_vdev_children_status(vdev_t *vdev, int64_t *child_status) {
+	zfs_dbgmsg("Trying to get children status");
 	// Check how many children it has
 	if (vdev->vdev_children == 0) {
 		return 1;
 	}
 
 	for (int i = 0; i < vdev->vdev_children; i++) {
-		child_status[i] = vdev_open(vdev->vdev_child[i]);
+		zfs_dbgmsg("Trying to acquire SCL_STATE_ALL writer lock");
+		// spa_config_enter(vdev->vdev_spa, SCL_STATE_ALL, FTAG, RW_WRITER);
+		zfs_dbgmsg("Acquired SCL_STATE_ALL writer lock on vdev");
+
+		vdev_t *vd = vdev->vdev_child[i];
+		vd->vdev_open_thread = curthread;
+		zfs_dbgmsg("Current vdev state %llu", (longlong_t) vd->vdev_state);
+		vdev_close(vd);
+		child_status[i] = vdev_open(vd);
+		vd->vdev_open_thread = NULL;
+
+		// spa_config_exit(vdev->vdev_spa, SCL_STATE_ALL, FTAG);
 		zfs_dbgmsg("child status %d is %lld", i, child_status[i]);
+		zfs_dbgmsg("Released writer SCL_STATE_ALL lock");
 	}
 
 	return 0;
@@ -7575,7 +7588,7 @@ mlec_dump_objset(objset_t *os, nvlist_t *out)
 	uint64_t object;
 	char osname[ZFS_MAX_DATASET_NAME_LEN];
 	int error;
-
+	
 	dmu_objset_name(os, osname);
 	zfs_dbgmsg("Object set name %s", osname);
 
@@ -7616,6 +7629,8 @@ mlec_dump_objset(objset_t *os, nvlist_t *out)
 			nv_error += nvlist_add_int64(attributes, "object", object);
 			nv_error += nvlist_add_int64(attributes, "type", dn->dn_type);
 			nv_error += nvlist_add_string(attributes, "path", path);
+
+			zfs_dbgmsg("Got dnode basic attributes");
 			
 			// Get the fsize
 			uint64_t fsize;
@@ -7629,6 +7644,7 @@ mlec_dump_objset(objset_t *os, nvlist_t *out)
 			}
 			sa_handle_destroy(hdl);
 			sa_buf_rele(db, FTAG);
+			zfs_dbgmsg("Got fsize");
 
 			nv_error += nvlist_add_int64(attributes, "fsize", fsize);
 
@@ -7642,6 +7658,8 @@ mlec_dump_objset(objset_t *os, nvlist_t *out)
 
 			mlec_get_raidz_info(vdev, vdev->vdev_tsd, fsize, &info);
 			zfs_get_vdev_children_status(vdev, child_status);
+
+			zfs_dbgmsg("Got raidz info");
 			
 			// Get child status
 			nv_error += nvlist_add_int64(attributes, "dcols", info.dcols);
@@ -7678,7 +7696,7 @@ mlec_dump_objset(objset_t *os, nvlist_t *out)
 
 /*ARGSUSED*/
 static int
-mlec_dump_one_objset(const char *dsname, void *arg)
+mlec_dump_one_objset(const char *dsname, nvlist_t *arg)
 {
 	int error;
 	objset_t *os;
@@ -7686,15 +7704,24 @@ mlec_dump_one_objset(const char *dsname, void *arg)
 
 	nvlist_t *out = (nvlist_t *) arg;
 
+	spa_t *spa;
+	spa_open(dsname, &spa, FTAG);
+
 	error = mlec_open_objset(dsname, FTAG, &os, &ds);
 	if (error != 0) {
 		zfs_dbgmsg("mlec_open_objset failed");
 		return (0);
 	}
+	spa_config_enter(os->os_spa, SCL_ALL, FTAG, RW_READER);
+
 
 	// nvlist_add_int64(out, "children", 101);
 	mlec_dump_objset(os, out);
+	spa_config_exit(os->os_spa, SCL_ALL, FTAG);
+
 	mlec_close_objset(os, FTAG, ds);
+	spa_close(spa, FTAG);
+
 	return (0);
 }
 
@@ -7760,19 +7787,22 @@ static const zfs_ioc_key_t zfs_keys_failed_chunks[] = {
 static int
 zfs_ioc_pool_all_dnode(const char *poolname, nvlist_t *innvl, nvlist_t *outnvl)
 {
-	zfs_dbgmsg("zfs pool_all_dnode called");
-	spa_t *spa;
+	zfs_dbgmsg("zfs pool_all_dnode called on pool %s", poolname);
+	// spa_t *spa;
 
-	if (spa_open(poolname, &spa, FTAG)) {
-		zfs_dbgmsg("spa cannot be opened");
-		return 2;
-	}
+	// if (spa_open(poolname, &spa, FTAG)) {
+	// 	zfs_dbgmsg("spa cannot be opened");
+	// 	spa_close(spa, FTAG);
+	// 	return 2;
+	// }
 
-	dmu_objset_find(spa_name(spa), mlec_dump_one_objset,
-		    outnvl, DS_FIND_CHILDREN);
+	// error = dmu_objset_find_impl(spa, spa_name(spa), mlec_dump_one_objset, outnvl, DS_FIND_CHILDREN);
+	// dmu_objset_find(poolname, mlec_dump_one_objset,
+	// 	    outnvl, DS_FIND_CHILDREN);
+	
+	mlec_dump_one_objset(poolname, outnvl);
 
-
-	spa_close(spa, FTAG);
+	// spa_close(spa, FTAG);
 
 	return 0;
 }
