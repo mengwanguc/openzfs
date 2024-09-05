@@ -1014,8 +1014,8 @@ extern "C"
 		ZIO_TYPE_CLAIM,
 		ZIO_TYPE_IOCTL,
 		ZIO_TYPE_TRIM,
-		ZIO_TYPES,
-		ZIO_TYPE_MLEC_WRITE_DATA
+		ZIO_TYPE_MLEC_WRITE_DATA,
+		ZIO_TYPES
 	} zio_type_t;
 
 	/*
@@ -1188,10 +1188,10 @@ extern "C"
 								[VDEV_L_HISTO_BUCKETS];
 
 		/* Total ZIO latency (ns).  Includes queuing and disk access time */
-		uint64_t vsx_total_histo[ZIO_TYPE_MLEC_WRITE_DATA][VDEV_L_HISTO_BUCKETS];
+		uint64_t vsx_total_histo[ZIO_TYPES][VDEV_L_HISTO_BUCKETS];
 
 		/* Amount of time to read/write the disk (ns) */
-		uint64_t vsx_disk_histo[ZIO_TYPE_MLEC_WRITE_DATA][VDEV_L_HISTO_BUCKETS];
+		uint64_t vsx_disk_histo[ZIO_TYPES][VDEV_L_HISTO_BUCKETS];
 
 		/* "lookup the bucket for a value" histogram macros */
 #define HISTO(val, buckets) (val != 0 ? MIN(highbit64(val) - 1, \

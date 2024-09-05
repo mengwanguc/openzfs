@@ -225,7 +225,7 @@ struct spa {
 	boolean_t	spa_is_splitting;	/* in the middle of a split? */
 	spa_config_source_t spa_config_source;	/* where config comes from? */
 	uint64_t	spa_import_flags;	/* import specific flags */
-	spa_taskqs_t	spa_zio_taskq[ZIO_TYPE_MLEC_WRITE_DATA][ZIO_TASKQ_TYPES];
+	spa_taskqs_t	spa_zio_taskq[ZIO_TYPES][ZIO_TASKQ_TYPES];
 	dsl_pool_t	*spa_dsl_pool;
 	boolean_t	spa_is_initializing;	/* true while opening pool */
 	boolean_t	spa_is_exporting;	/* true while exporting pool */

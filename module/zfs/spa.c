@@ -151,7 +151,7 @@ static const char *const zio_taskq_types[ZIO_TASKQ_TYPES] = {
  * and interrupt) and then to reserve threads for ZIO_PRIORITY_NOW I/Os that
  * need to be handled with minimum delay.
  */
-const zio_taskq_info_t zio_taskqs[ZIO_TYPE_MLEC_WRITE_DATA][ZIO_TASKQ_TYPES] = {
+const zio_taskq_info_t zio_taskqs[ZIO_TYPES][ZIO_TASKQ_TYPES] = {
 	/* ISSUE	ISSUE_HIGH	INTR		INTR_HIGH */
 	{ ZTI_ONE,	ZTI_NULL,	ZTI_ONE,	ZTI_NULL }, /* NULL */
 	{ ZTI_N(8),	ZTI_NULL,	ZTI_SCALE,	ZTI_NULL }, /* READ */
@@ -980,6 +980,8 @@ spa_taskqs_init(spa_t *spa, zio_type_t t, zio_taskq_type_t q)
 	uint_t cpus, flags = TASKQ_DYNAMIC;
 	boolean_t batch = B_FALSE;
 
+	tqs->stqs_count = 0;
+
 	switch (mode) {
 	case ZTI_MODE_FIXED:
 		ASSERT3U(value, >, 0);
@@ -1041,6 +1043,7 @@ spa_taskqs_init(spa_t *spa, zio_type_t t, zio_taskq_type_t q)
 	}
 
 	ASSERT3U(count, >, 0);
+	zfs_dbgmsg("Assigning tqs count %llu",  (longlong_t) count);
 	tqs->stqs_count = count;
 	tqs->stqs_taskq = kmem_alloc(count * sizeof (taskq_t *), KM_SLEEP);
 
@@ -1122,17 +1125,20 @@ void
 spa_taskq_dispatch_ent(spa_t *spa, zio_type_t t, zio_taskq_type_t q,
     task_func_t *func, void *arg, uint_t flags, taskq_ent_t *ent)
 {
-	zfs_dbgmsg("spa_taskq_dispatch called");
+	zfs_dbgmsg("spa_taskq_dispatch called for type %d-%d", t, q);
+	ASSERT3P(spa, !=, NULL);
 	spa_taskqs_t *tqs = &spa->spa_zio_taskq[t][q];
 	taskq_t *tq;
 
+	ASSERT3P(tqs, !=, NULL);
 	ASSERT3P(tqs->stqs_taskq, !=, NULL);
 	ASSERT3U(tqs->stqs_count, !=, 0);
 
-	zfs_dbgmsg("spa_taskq_dispatch passed assertion with stqs_count %llu", (longlong_t) tqs->stqs_count);
+	zfs_dbgmsg("spa_taskq_dispatch passed assertion with stqs_count %x", (uint_t) tqs->stqs_count);
 	if (tqs->stqs_count == 1) {
 		tq = tqs->stqs_taskq[0];
 	} else {
+		zfs_dbgmsg("stqs count not 1 %d %llu %ld", tqs->stqs_count, (longlong_t)((uint64_t)gethrtime()), ((uint64_t)gethrtime()) % tqs->stqs_count);
 		tq = tqs->stqs_taskq[((uint64_t)gethrtime()) % tqs->stqs_count];
 	}
 
@@ -1168,8 +1174,9 @@ spa_taskq_dispatch_sync(spa_t *spa, zio_type_t t, zio_taskq_type_t q,
 static void
 spa_create_zio_taskqs(spa_t *spa)
 {
-	for (int t = 0; t < ZIO_TYPE_MLEC_WRITE_DATA; t++) {
+	for (int t = 0; t < ZIO_TYPES + 1; t++) {
 		for (int q = 0; q < ZIO_TASKQ_TYPES; q++) {
+			zfs_dbgmsg("Initializing task queue %d-%d", t, q);
 			spa_taskqs_init(spa, t, q);
 		}
 	}
@@ -1400,7 +1407,7 @@ spa_deactivate(spa_t *spa)
 
 	taskq_cancel_id(system_delay_taskq, spa->spa_deadman_tqid);
 
-	for (int t = 0; t < ZIO_TYPE_MLEC_WRITE_DATA; t++) {
+	for (int t = 0; t < ZIO_TYPES; t++) {
 		for (int q = 0; q < ZIO_TASKQ_TYPES; q++) {
 			spa_taskqs_fini(spa, t, q);
 		}

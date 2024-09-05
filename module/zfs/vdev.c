@@ -4430,7 +4430,7 @@ vdev_get_child_stat_ex(vdev_t *cvd, vdev_stat_ex_t *vsx, vdev_stat_ex_t *cvsx)
 	(void) cvd;
 
 	int t, b;
-	for (t = 0; t < ZIO_TYPE_MLEC_WRITE_DATA; t++) {
+	for (t = 0; t < ZIO_TYPES; t++) {
 		for (b = 0; b < ARRAY_SIZE(vsx->vsx_disk_histo[0]); b++)
 			vsx->vsx_disk_histo[t][b] += cvsx->vsx_disk_histo[t][b];
 

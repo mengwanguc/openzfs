@@ -58,7 +58,7 @@
  * ==========================================================================
  */
 // We aer initializing 8 elements
-const char *zio_type_name[ZIO_TYPE_MLEC_WRITE_DATA] = {
+const char *zio_type_name[ZIO_TYPES] = {
 	/*
 	 * Note: Linux kernel thread name length is limited
 	 * so these names will differ from upstream open zfs.
@@ -2021,7 +2021,7 @@ zio_taskq_member(zio_t *zio, zio_taskq_type_t q)
 
 	taskq_t *tq = taskq_of_curthread();
 
-	for (zio_type_t t = 0; t < ZIO_TYPE_MLEC_WRITE_DATA; t++)
+	for (zio_type_t t = 0; t < ZIO_TYPES; t++)
 	{
 		spa_taskqs_t *tqs = &spa->spa_zio_taskq[t][q];
 		uint_t i;
@@ -2721,7 +2721,7 @@ zio_claim_gang(zio_t *pio, blkptr_t *bp, zio_gang_node_t *gn, abd_t *data,
 					  NULL, NULL, ZIO_GANG_CHILD_FLAGS(pio)));
 }
 
-static zio_gang_issue_func_t *zio_gang_issue_func[ZIO_TYPE_MLEC_WRITE_DATA] = {
+static zio_gang_issue_func_t *zio_gang_issue_func[ZIO_TYPES] = {
 	NULL,
 	zio_read_gang,
 	zio_rewrite_gang,
