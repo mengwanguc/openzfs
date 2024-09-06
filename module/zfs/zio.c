@@ -4121,7 +4121,7 @@ zio_vdev_io_done(zio_t *zio)
 	}
 
 	ASSERT(zio->io_type == ZIO_TYPE_READ ||
-		   zio->io_type == ZIO_TYPE_WRITE || zio->io_type == ZIO_TYPE_TRIM);
+		   zio->io_type == ZIO_TYPE_WRITE || zio->io_type == ZIO_TYPE_TRIM || zio->io_type == ZIO_TYPE_MLEC_WRITE_DATA);
 
 	if (zio->io_delay)
 		zio->io_delay = gethrtime() - zio->io_delay;
