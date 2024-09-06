@@ -1365,7 +1365,7 @@ zio_ioctl(zio_t *pio, spa_t *spa, vdev_t *vd, int cmd,
 
 	if (pio != NULL && pio->io_type == ZIO_TYPE_MLEC_WRITE_DATA) {
 		zio = zio_create(pio, spa, 0, NULL, NULL, 0, 0, done, private,
-						 ZIO_TYPE_MLEC_WRITE_DATA, ZIO_PRIORITY_NOW, flags, vd, 0, NULL,
+						 ZIO_TYPE_MLEC_WRITE_DATA, ZIO_PRIORITY_REBUILD, flags, vd, 0, NULL,
 						 ZIO_STAGE_OPEN, ZIO_IOCTL_PIPELINE);
 
 		zio->io_cmd = cmd;
@@ -3938,7 +3938,7 @@ int zio_alloc_zil(spa_t *spa, objset_t *os, uint64_t txg, blkptr_t *new_bp,
 static zio_t *
 zio_vdev_io_start(zio_t *zio)
 {
-	zfs_dbgmsg("zio_vdev_io_start called");
+	zfs_dbgmsg("zio_vdev_io_start called for type %d", zio->io_type);
 	vdev_t *vd = zio->io_vd;
 	uint64_t align;
 	spa_t *spa = zio->io_spa;
@@ -4072,6 +4072,8 @@ zio_vdev_io_start(zio_t *zio)
 		return (zio);
 	}
 
+
+	zfs_dbgmsg("zio_vdev_io_start type is %d", zio->io_type);
 	/*
 	 * Select the next best leaf I/O to process.  Distributed spares are
 	 * excluded since they dispatch the I/O directly to a leaf vdev after
@@ -4081,13 +4083,15 @@ zio_vdev_io_start(zio_t *zio)
 		vd->vdev_ops != &vdev_draid_spare_ops &&
 		(zio->io_type == ZIO_TYPE_READ ||
 		 zio->io_type == ZIO_TYPE_WRITE ||
-		 zio->io_type == ZIO_TYPE_TRIM))
+		 zio->io_type == ZIO_TYPE_TRIM ||
+		 zio->io_type == ZIO_TYPE_MLEC_WRITE_DATA))
 	{
-		zfs_dbgmsg("draid leave ops");
+		zfs_dbgmsg("vdev leave ops");
 
 		if (zio->io_type == ZIO_TYPE_READ && vdev_cache_read(zio))
 			return (zio);
 
+		zfs_dbgmsg("vdev ops is write");
 		if ((zio = vdev_queue_io(zio)) == NULL)
 			return (NULL);
 

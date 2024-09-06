@@ -258,10 +258,11 @@ vdev_queue_class_tree(vdev_queue_t *vq, zio_priority_t p)
 static inline avl_tree_t *
 vdev_queue_type_tree(vdev_queue_t *vq, zio_type_t t)
 {
-	ASSERT(t == ZIO_TYPE_READ || t == ZIO_TYPE_WRITE || t == ZIO_TYPE_TRIM);
+	ASSERT(t == ZIO_TYPE_READ || t == ZIO_TYPE_WRITE || t == ZIO_TYPE_TRIM || t == ZIO_TYPE_MLEC_WRITE_DATA);
 	if (t == ZIO_TYPE_READ)
 		return (&vq->vq_read_offset_tree);
-	else if (t == ZIO_TYPE_WRITE)
+	// TODO: make a mlec specific offset
+	else if (t == ZIO_TYPE_WRITE || t == ZIO_TYPE_MLEC_WRITE_DATA)
 		return (&vq->vq_write_offset_tree);
 	else
 		return (&vq->vq_trim_offset_tree);
@@ -875,6 +876,7 @@ vdev_queue_io(zio_t *zio)
 	if (zio->io_flags & ZIO_FLAG_DONT_QUEUE)
 		return (zio);
 
+	zfs_dbgmsg("Going to queue in vdev_queue_io");
 	/*
 	 * Children i/os inherent their parent's priority, which might
 	 * not match the child's i/o type.  Fix it up here.
@@ -890,7 +892,7 @@ vdev_queue_io(zio_t *zio)
 		    zio->io_priority != ZIO_PRIORITY_REBUILD) {
 			zio->io_priority = ZIO_PRIORITY_ASYNC_READ;
 		}
-	} else if (zio->io_type == ZIO_TYPE_WRITE) {
+	} else if (zio->io_type == ZIO_TYPE_WRITE || zio->io_type == ZIO_TYPE_MLEC_WRITE_DATA) {
 		ASSERT(zio->io_priority != ZIO_PRIORITY_TRIM);
 
 		if (zio->io_priority != ZIO_PRIORITY_SYNC_WRITE &&
@@ -908,6 +910,7 @@ vdev_queue_io(zio_t *zio)
 	zio->io_flags |= ZIO_FLAG_DONT_CACHE | ZIO_FLAG_DONT_QUEUE;
 	zio->io_timestamp = gethrtime();
 
+	zfs_dbgmsg("Adding to queue for io type %d", zio->io_type);
 	mutex_enter(&vq->vq_lock);
 	vdev_queue_io_add(vq, zio);
 	nio = vdev_queue_io_to_issue(vq);
