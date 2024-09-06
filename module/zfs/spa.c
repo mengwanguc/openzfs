@@ -1036,9 +1036,12 @@ spa_taskqs_init(spa_t *spa, zio_type_t t, zio_taskq_type_t q)
 		return;
 
 	default:
-		panic("unrecognized mode for %s_%s taskq (%u:%u) in "
+		zfs_dbgmsg("unrecognized mode for %s_%s taskq (%u:%u) in "
 		    "spa_activate()",
 		    zio_type_name[t], zio_taskq_types[q], mode, value);
+		// panic("unrecognized mode for %s_%s taskq (%u:%u) in "
+		//     "spa_activate()",
+		//     zio_type_name[t], zio_taskq_types[q], mode, value);
 		break;
 	}
 
@@ -1174,7 +1177,7 @@ spa_taskq_dispatch_sync(spa_t *spa, zio_type_t t, zio_taskq_type_t q,
 static void
 spa_create_zio_taskqs(spa_t *spa)
 {
-	for (int t = 0; t < ZIO_TYPES + 1; t++) {
+	for (int t = 0; t < ZIO_TYPES; t++) {
 		for (int q = 0; q < ZIO_TASKQ_TYPES; q++) {
 			zfs_dbgmsg("Initializing task queue %d-%d", t, q);
 			spa_taskqs_init(spa, t, q);
