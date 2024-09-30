@@ -5,6 +5,16 @@ There are two main folder to look at
 
 I will split the rest of the README according to the two components
 
+## Building
+To build this repo, we just need to run the scripts `zfs_reinstall.sh`. This script will
+1. Tear down all the existing ZFS pools in your system
+2. Remove the ZFS/SPL kernel module
+3. Remove the ZFS libs files
+4. Build ZFS with userspace and kernel debug symbols
+5. Enable ZFS/SPL kernel module
+6. Create a test RAID-Z pool with 2+1 config along with a test file
+Note that if step **1** says that ZFS pool is busy and cannot be destroyed, you would need to reboot your VM. That most likely means your currently running ZFS caused a kernel panic and thus cannot be properly unmounted.
+
 ## `ioctl` calls
 We use `ioctl` for HDFS to
 - `mlec_easy_scrub`: get all the failure information from ZFS through ZAP (ZFS attribute processor)
