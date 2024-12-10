@@ -1,0 +1,71 @@
+/* Notes for workflow of zfs. */
+
+main()                              /* cmd/zpool/zpool_main.c */
+zpool_do_attach_or_replace()        /* cmd/zpool/zpool_main.c */
+zpool_vdev_attach()                 /* lib/libzfs/libzfs_pool.c */
+zfs_ioctl()                         /* lib/libzfs/os/linux/libzfs_util_os.c */
+
+/* Switch to system call ioctl(), the reset will be printed in  
+    /proc/spl/kstat/zfs/dbgmsg via zfs_dbgmsg(). */
+
+zfs_ioc_vdev_attach()               /* module/zfs/zfs_ioctl.c */
+spa_vdev_attach()                   /* module/zfs/spa.c*/
+
+/* during rebuild, a new thread will be created for rebuild */
+
+
+/* where vdev_mirror_io_start start is called */
+vdev_op_io_start()      /* first mapped to this function*/
+zio_vdev_io_start()     /* Start the io to disks*/
+/* together, the form a list zio_pipeline. The function are then called 
+in __zio_execute()*/
+
+
+
+sturcts note:
+
+vdev_t    struct for a virtual device
+zio_t      io struct
+dmu_t      data management unit here 
+
+
+vdev_alloc()     in vdev.c , allocate a vdev struct, associate operations
+This is called by spa_config_parse() in spa.c. 
+
+vdev_open()      open the corresponding vdev 
+
+
+in attach, a new root vdev is created. 
+
+questions: What is the synchronization behind zio? (Need time to investigate)
+
+What connects zio_execute? Are there multiple threads open? 
+What to do next? 
+in spa.h : print rebuild
+check what's inside dsl_scan
+find whether zio_wait is being used. 
+
+
+mirror  call time: 2157
+zio_io_start : 1167
+vd = Null 438
+replacing 552 
+
+
+Questions: what happens when we have 3 leaf vdevs in a mirror? 
+
+
+
+Create workflow:
+
+zpool_do_create()     
+
+zpool_create()     This swithed to zfs kernel module
+
+zfs_ioc_pool_create()   
+
+spa_create()
+
+spa_config_parse()     Here the vdev tree is allocated recursively
+
+vdev_alloc()          We do individual allocation here

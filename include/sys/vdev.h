@@ -62,7 +62,7 @@ extern int vdev_copy_path_strict(vdev_t *, vdev_t *);
 extern void vdev_copy_path_relaxed(vdev_t *, vdev_t *);
 extern void vdev_close(vdev_t *);
 extern int vdev_create(vdev_t *, uint64_t txg, boolean_t isreplace);
-extern void vdev_reopen(vdev_t *);
+extern int vdev_reopen(vdev_t *);
 extern int vdev_validate_aux(vdev_t *vd);
 extern zio_t *vdev_probe(vdev_t *vd, zio_t *pio);
 extern boolean_t vdev_is_concrete(vdev_t *vd);

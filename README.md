@@ -1,35 +1,53 @@
-![img](https://openzfs.github.io/openzfs-docs/_static/img/logo/480px-Open-ZFS-Secondary-Logo-Colour-halfsize.png)
+# About this repo
 
-OpenZFS is an advanced file system and volume manager which was originally
-developed for Solaris and is now maintained by the OpenZFS community.
-This repository contains the code for running OpenZFS on Linux and FreeBSD.
+This repository is modified based on the release version of OpenZFS 2.1. This is part of MLEC (Multi-level Erasure Coding) project that aims to implement MLEC in a real system. In the end, we hope to build HDFS on top of OpenZFS, with MLEC implemented.
 
-[![codecov](https://codecov.io/gh/openzfs/zfs/branch/master/graph/badge.svg)](https://codecov.io/gh/openzfs/zfs)
-[![coverity](https://scan.coverity.com/projects/1973/badge.svg)](https://scan.coverity.com/projects/openzfs-zfs)
+# Initial Installation
 
-# Official Resources
+First, reserve a node from Chameleon following this [guide](https://chameleoncloud.readthedocs.io/en/latest/technical/reservations.html), and launch an [instances](https://chameleoncloud.readthedocs.io/en/latest/technical/baremetal.html). The installation generally works for Ubuntu 20.04 and 22.04.
 
-  * [Documentation](https://openzfs.github.io/openzfs-docs/) - for using and developing this repo
-  * [ZoL Site](https://zfsonlinux.org) - Linux release info & links
-  * [Mailing lists](https://openzfs.github.io/openzfs-docs/Project%20and%20Community/Mailing%20Lists.html)
-  * [OpenZFS site](https://openzfs.org/) - for conference videos and info on other platforms (illumos, OSX, Windows, etc)
+Then, clone the repository, and switch to the branch with MLEC implementation. 
+```
+git clone https://github.com/zhynwng/zfs-MLEC.git
+git checkout zfs-2.1-myraid
+```
 
-# Installation
+Run the initialization script, which will install all necessary packages and set up the environment. Press Y for all options during package installation.
+```
+cd zfs-MLEC
+./zfs_init.sh
+```
 
-Full documentation for installing OpenZFS on your favorite operating system can
-be found at the [Getting Started Page](https://openzfs.github.io/openzfs-docs/Getting%20Started/index.html).
+Then reboot the machine. Make sure all changes are saved before you reboot. 
+```
+sudo reboot
+```
 
-# Contribute & Develop
+After the reboot, you can run the full installation script. This script will set up system configuration to build ZFS from source.
+```
+./zfs_full_install.sh
+```
 
-We have a separate document with [contribution guidelines](./.github/CONTRIBUTING.md).
+You can see whether zfs is successfully installed by trying the command "zfs list". This the expected result:
+```
+cc@node2:~/zfs-MLEC$ zfs list
+no datasets available
+```
 
-We have a [Code of Conduct](./CODE_OF_CONDUCT.md).
+# Later install and uninstall
 
-# Release
+After the first installation, you can using the more light-weight installation script. This script omits some of the steps to make the build process faster
+```
+./zfs_install.sh
+```
 
-OpenZFS is released under a CDDL license.
-For more details see the NOTICE, LICENSE and COPYRIGHT files; `UCRL-CODE-235197`
+You can remove ZFS from the system by the following script
+```
+zfs_uninstall.sh
+```
 
-# Supported Kernels
-  * The `META` file contains the officially recognized supported Linux kernel versions.
-  * Supported FreeBSD versions are any supported branches and releases starting from 12.2-RELEASE.
+There are also testing scripts to test the general functionality of ZFS erasure coding systems (one is for general repair test, the other is to test the new easyscrub method). Feel free to explore and change these two scripts
+```
+./zfs_test.sh
+./scrub_tesh.sh
+```

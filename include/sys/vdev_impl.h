@@ -102,6 +102,7 @@ typedef void vdev_metaslab_init_func_t(vdev_t *vd, uint64_t *startp,
 typedef void vdev_config_generate_func_t(vdev_t *vd, nvlist_t *nv);
 typedef uint64_t vdev_nparity_func_t(vdev_t *vd);
 typedef uint64_t vdev_ndisks_func_t(vdev_t *vd);
+typedef uint64_t vdev_direct_data_inject_func(vdev_t *vd);
 
 typedef const struct vdev_ops {
 	vdev_init_func_t		*vdev_op_init;
@@ -125,6 +126,7 @@ typedef const struct vdev_ops {
 	vdev_nparity_func_t		*vdev_op_nparity;
 	vdev_ndisks_func_t		*vdev_op_ndisks;
 	vdev_kobj_post_evt_func_t	*vdev_op_kobj_evt_post;
+	// vdev_direct_data_inject_func  *vdev_direct_data_inject;
 	char				vdev_op_type[16];
 	boolean_t			vdev_op_leaf;
 } vdev_ops_t;
@@ -610,6 +612,8 @@ extern vdev_ops_t vdev_missing_ops;
 extern vdev_ops_t vdev_hole_ops;
 extern vdev_ops_t vdev_spare_ops;
 extern vdev_ops_t vdev_indirect_ops;
+extern vdev_ops_t vdev_my_mirror_ops;
+extern vdev_ops_t vdev_my_raidz_ops;
 
 /*
  * Common size functions

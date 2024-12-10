@@ -137,6 +137,12 @@ int lzc_wait_fs(const char *, zfs_wait_activity_t, boolean_t *);
 
 int lzc_set_bootenv(const char *, const nvlist_t *);
 int lzc_get_bootenv(const char *, nvlist_t **);
+
+// MLEC test stuff
+int lzc_mlec_receive_data(const char *pool, nvlist_t *input);
+int lzc_mlec_get_failed_chunks(const char *pool, nvlist_t *input, nvlist_t **output);
+int lzc_mlec_get_all_dnode(const char *pool, nvlist_t *input, nvlist_t **output);
+
 #ifdef	__cplusplus
 }
 #endif

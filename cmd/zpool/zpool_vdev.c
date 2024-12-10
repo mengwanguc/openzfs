@@ -1169,8 +1169,14 @@ get_parity(const char *type)
 	long parity = 0;
 	const char *p;
 
-	if (strncmp(type, VDEV_TYPE_RAIDZ, strlen(VDEV_TYPE_RAIDZ)) == 0) {
-		p = type + strlen(VDEV_TYPE_RAIDZ);
+	if (strncmp(type, VDEV_TYPE_RAIDZ, strlen(VDEV_TYPE_RAIDZ)) == 0 ||
+		strncmp(type, VDEV_TYPE_MY_RAIDZ, strlen(VDEV_TYPE_MY_RAIDZ)) == 0) {
+		
+		if (strncmp(type, VDEV_TYPE_RAIDZ, strlen(VDEV_TYPE_RAIDZ)) == 0) {
+			p = type + strlen(VDEV_TYPE_RAIDZ);
+		} else {
+			p = type + strlen(VDEV_TYPE_MY_RAIDZ);
+		}
 
 		if (*p == '\0') {
 			/* when unspecified default to single parity */
@@ -1225,8 +1231,11 @@ is_grouping(const char *type, int *mindev, int *maxdev)
 	int nparity;
 
 	if (strncmp(type, VDEV_TYPE_RAIDZ, strlen(VDEV_TYPE_RAIDZ)) == 0 ||
-	    strncmp(type, VDEV_TYPE_DRAID, strlen(VDEV_TYPE_DRAID)) == 0) {
+	    strncmp(type, VDEV_TYPE_DRAID, strlen(VDEV_TYPE_DRAID)) == 0 ||
+		strncmp(type, VDEV_TYPE_MY_RAIDZ, strlen(VDEV_TYPE_MY_RAIDZ)) == 0) {
 		nparity = get_parity(type);
+
+		printf("parity level %d\n", nparity);
 		if (nparity == 0)
 			return (NULL);
 		if (mindev != NULL)
@@ -1237,6 +1246,9 @@ is_grouping(const char *type, int *mindev, int *maxdev)
 		if (strncmp(type, VDEV_TYPE_RAIDZ,
 		    strlen(VDEV_TYPE_RAIDZ)) == 0) {
 			return (VDEV_TYPE_RAIDZ);
+		} else if (strncmp(type, VDEV_TYPE_MY_RAIDZ,
+		    strlen(VDEV_TYPE_MY_RAIDZ)) == 0) {
+			return (VDEV_TYPE_MY_RAIDZ);
 		} else {
 			return (VDEV_TYPE_DRAID);
 		}
@@ -1251,6 +1263,12 @@ is_grouping(const char *type, int *mindev, int *maxdev)
 		return (VDEV_TYPE_MIRROR);
 	}
 
+	if (strcmp(type, "my_mirror") == 0 ) {
+		if (mindev != NULL)
+			*mindev = 2;
+		return (VDEV_TYPE_MY_MIRROR);
+	}
+	
 	if (strcmp(type, "spare") == 0) {
 		if (mindev != NULL)
 			*mindev = 1;
@@ -1622,7 +1640,8 @@ construct_spec(nvlist_t *props, int argc, char **argv)
 					    ZPOOL_CONFIG_ALLOCATION_BIAS,
 					    VDEV_ALLOC_BIAS_DEDUP) == 0);
 				}
-				if (strcmp(type, VDEV_TYPE_RAIDZ) == 0) {
+				if (strcmp(type, VDEV_TYPE_RAIDZ) == 0 ||
+					strcmp(type, VDEV_TYPE_MY_RAIDZ) == 0) {
 					verify(nvlist_add_uint64(nv,
 					    ZPOOL_CONFIG_NPARITY,
 					    mindev - 1) == 0);

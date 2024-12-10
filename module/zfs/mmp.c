@@ -674,7 +674,7 @@ mmp_thread(void *arg)
 			    spa_name(spa),
 			    NSEC2MSEC(gethrtime() - mmp->mmp_last_write),
 			    gethrtime());
-			zio_suspend(spa, NULL, ZIO_SUSPEND_MMP);
+			// zio_suspend(spa, NULL, ZIO_SUSPEND_MMP);
 		}
 
 		if (multihost && !suspended)

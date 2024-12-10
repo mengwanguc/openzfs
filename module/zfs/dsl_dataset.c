@@ -569,13 +569,16 @@ dsl_dataset_hold_obj(dsl_pool_t *dp, uint64_t dsobj, void *tag,
 	ASSERT(dsl_pool_config_held(dp));
 
 	err = dmu_bonus_hold(mos, dsobj, tag, &dbuf);
-	if (err != 0)
+	if (err != 0) {
+		zfs_dbgmsg("dmu bonus hold failed");
 		return (err);
+	}
 
 	/* Make sure dsobj has the correct object type. */
 	dmu_object_info_from_db(dbuf, &doi);
 	if (doi.doi_bonus_type != DMU_OT_DSL_DATASET) {
 		dmu_buf_rele(dbuf, tag);
+		zfs_dbgmsg("doi bonus allocation failed");
 		return (SET_ERROR(EINVAL));
 	}
 
@@ -594,6 +597,7 @@ dsl_dataset_hold_obj(dsl_pool_t *dp, uint64_t dsobj, void *tag,
 		if (err != 0) {
 			kmem_free(ds, sizeof (dsl_dataset_t));
 			dmu_buf_rele(dbuf, tag);
+			zfs_dbgmsg("dsl_dir_hold_obj error out");
 			return (err);
 		}
 

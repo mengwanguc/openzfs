@@ -160,6 +160,7 @@ const zio_taskq_info_t zio_taskqs[ZIO_TYPES][ZIO_TASKQ_TYPES] = {
 	{ ZTI_ONE,	ZTI_NULL,	ZTI_ONE,	ZTI_NULL }, /* CLAIM */
 	{ ZTI_ONE,	ZTI_NULL,	ZTI_ONE,	ZTI_NULL }, /* IOCTL */
 	{ ZTI_N(4),	ZTI_NULL,	ZTI_ONE,	ZTI_NULL }, /* TRIM */
+	{ ZTI_ONE,	ZTI_NULL,	ZTI_ONE,	ZTI_NULL }  /* MLEC stuff */
 };
 
 static void spa_sync_version(void *arg, dmu_tx_t *tx);
@@ -979,6 +980,8 @@ spa_taskqs_init(spa_t *spa, zio_type_t t, zio_taskq_type_t q)
 	uint_t cpus, flags = TASKQ_DYNAMIC;
 	boolean_t batch = B_FALSE;
 
+	tqs->stqs_count = 0;
+
 	switch (mode) {
 	case ZTI_MODE_FIXED:
 		ASSERT3U(value, >, 0);
@@ -1033,13 +1036,17 @@ spa_taskqs_init(spa_t *spa, zio_type_t t, zio_taskq_type_t q)
 		return;
 
 	default:
-		panic("unrecognized mode for %s_%s taskq (%u:%u) in "
+		zfs_dbgmsg("unrecognized mode for %s_%s taskq (%u:%u) in "
 		    "spa_activate()",
 		    zio_type_name[t], zio_taskq_types[q], mode, value);
+		// panic("unrecognized mode for %s_%s taskq (%u:%u) in "
+		//     "spa_activate()",
+		//     zio_type_name[t], zio_taskq_types[q], mode, value);
 		break;
 	}
 
 	ASSERT3U(count, >, 0);
+	zfs_dbgmsg("Assigning tqs count %llu",  (longlong_t) count);
 	tqs->stqs_count = count;
 	tqs->stqs_taskq = kmem_alloc(count * sizeof (taskq_t *), KM_SLEEP);
 
@@ -1121,18 +1128,24 @@ void
 spa_taskq_dispatch_ent(spa_t *spa, zio_type_t t, zio_taskq_type_t q,
     task_func_t *func, void *arg, uint_t flags, taskq_ent_t *ent)
 {
+	zfs_dbgmsg("spa_taskq_dispatch called for type %d-%d", t, q);
+	ASSERT3P(spa, !=, NULL);
 	spa_taskqs_t *tqs = &spa->spa_zio_taskq[t][q];
 	taskq_t *tq;
 
+	ASSERT3P(tqs, !=, NULL);
 	ASSERT3P(tqs->stqs_taskq, !=, NULL);
 	ASSERT3U(tqs->stqs_count, !=, 0);
 
+	zfs_dbgmsg("spa_taskq_dispatch passed assertion with stqs_count %x", (uint_t) tqs->stqs_count);
 	if (tqs->stqs_count == 1) {
 		tq = tqs->stqs_taskq[0];
 	} else {
+		zfs_dbgmsg("stqs count not 1 %d %llu %ld", tqs->stqs_count, (longlong_t)((uint64_t)gethrtime()), ((uint64_t)gethrtime()) % tqs->stqs_count);
 		tq = tqs->stqs_taskq[((uint64_t)gethrtime()) % tqs->stqs_count];
 	}
 
+	zfs_dbgmsg("Dispatching taskq ent");
 	taskq_dispatch_ent(tq, func, arg, flags, ent);
 }
 
@@ -1166,6 +1179,7 @@ spa_create_zio_taskqs(spa_t *spa)
 {
 	for (int t = 0; t < ZIO_TYPES; t++) {
 		for (int q = 0; q < ZIO_TASKQ_TYPES; q++) {
+			zfs_dbgmsg("Initializing task queue %d-%d", t, q);
 			spa_taskqs_init(spa, t, q);
 		}
 	}
@@ -5147,6 +5161,7 @@ static int
 spa_open_common(const char *pool, spa_t **spapp, void *tag, nvlist_t *nvpolicy,
     nvlist_t **config)
 {
+	zfs_dbgmsg("spa_open_common called");
 	spa_t *spa;
 	spa_load_state_t state = SPA_LOAD_OPEN;
 	int error;
@@ -5165,12 +5180,15 @@ spa_open_common(const char *pool, spa_t **spapp, void *tag, nvlist_t *nvpolicy,
 		mutex_enter(&spa_namespace_lock);
 		locked = B_TRUE;
 	}
+	zfs_dbgmsg("spa namespace lock acquired");
 
 	if ((spa = spa_lookup(pool)) == NULL) {
 		if (locked)
 			mutex_exit(&spa_namespace_lock);
 		return (SET_ERROR(ENOENT));
 	}
+
+	zfs_dbgmsg("spa_lookup good");
 
 	if (spa->spa_state == POOL_STATE_UNINITIALIZED) {
 		zpool_load_policy_t policy;
@@ -5246,6 +5264,7 @@ spa_open_common(const char *pool, spa_t **spapp, void *tag, nvlist_t *nvpolicy,
 	}
 
 	if (locked) {
+		zfs_dbgmsg("spa_lookup lock is held");
 		spa->spa_last_open_failed = 0;
 		spa->spa_last_ubsync_txg = 0;
 		spa->spa_load_txg = 0;
@@ -5255,6 +5274,7 @@ spa_open_common(const char *pool, spa_t **spapp, void *tag, nvlist_t *nvpolicy,
 	if (firstopen)
 		zvol_create_minors_recursive(spa_name(spa));
 
+	zfs_dbgmsg("spa_open reference acquired");
 	*spapp = spa;
 
 	return (0);
@@ -9219,7 +9239,7 @@ spa_sync_rewrite_vdev_config(spa_t *spa, dmu_tx_t *tx)
 
 		if (error == 0)
 			break;
-		zio_suspend(spa, NULL, ZIO_SUSPEND_IOERR);
+		// zio_suspend(spa, NULL, ZIO_SUSPEND_IOERR);
 		zio_resume_wait(spa);
 	}
 }

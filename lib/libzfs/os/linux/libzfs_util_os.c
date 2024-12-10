@@ -48,6 +48,7 @@
 int
 zfs_ioctl(libzfs_handle_t *hdl, int request, zfs_cmd_t *zc)
 {
+	// printf("Calling linux ioctl with fd %d, request %d\n", hdl->libzfs_fd, request);
 	return (ioctl(hdl->libzfs_fd, request, zc));
 }
 

@@ -236,6 +236,8 @@ static vdev_ops_t *vdev_ops_table[] = {
 	&vdev_missing_ops,
 	&vdev_hole_ops,
 	&vdev_indirect_ops,
+	&vdev_my_mirror_ops,
+	&vdev_my_raidz_ops,
 	NULL
 };
 
@@ -246,6 +248,8 @@ static vdev_ops_t *
 vdev_getops(const char *type)
 {
 	vdev_ops_t *ops, **opspp;
+
+	/* zfs_dbgmsg("type: %s", vdev_my_mirror_ops.vdev_op_type); */
 
 	for (opspp = vdev_ops_table; (ops = *opspp) != NULL; opspp++)
 		if (strcmp(ops->vdev_op_type, type) == 0)
@@ -707,8 +711,11 @@ vdev_alloc(spa_t *spa, vdev_t **vdp, nvlist_t *nv, vdev_t *parent, uint_t id,
 	if (nvlist_lookup_string(nv, ZPOOL_CONFIG_TYPE, &type) != 0)
 		return (SET_ERROR(EINVAL));
 
+
 	if ((ops = vdev_getops(type)) == NULL)
 		return (SET_ERROR(EINVAL));
+
+	zfs_dbgmsg("get ops sucessful");
 
 	/*
 	 * If this is a load, get the vdev guid from the nvlist.
@@ -734,12 +741,15 @@ vdev_alloc(spa_t *spa, vdev_t **vdp, nvlist_t *nv, vdev_t *parent, uint_t id,
 			return (SET_ERROR(EINVAL));
 	}
 
+	zfs_dbgmsg("<2>");
+	zfs_dbgmsg("%s", ops->vdev_op_type);
 	/*
 	 * The first allocated vdev must be of type 'root'.
 	 */
 	if (ops != &vdev_root_ops && spa->spa_root_vdev == NULL)
 		return (SET_ERROR(EINVAL));
 
+	zfs_dbgmsg("non-root");
 	/*
 	 * Determine whether we're a log vdev.
 	 */
@@ -751,6 +761,7 @@ vdev_alloc(spa_t *spa, vdev_t **vdp, nvlist_t *nv, vdev_t *parent, uint_t id,
 	if (ops == &vdev_hole_ops && spa_version(spa) < SPA_VERSION_HOLES)
 		return (SET_ERROR(ENOTSUP));
 
+	zfs_dbgmsg("next step");
 	if (top_level && alloctype == VDEV_ALLOC_ADD) {
 		char *bias;
 
@@ -778,6 +789,7 @@ vdev_alloc(spa_t *spa, vdev_t **vdp, nvlist_t *nv, vdev_t *parent, uint_t id,
 		}
 	}
 
+	zfs_dbgmsg("<2.5>");
 	/*
 	 * Initialize the vdev specific data.  This is done before calling
 	 * vdev_alloc_common() since it may fail and this simplifies the
@@ -790,7 +802,7 @@ vdev_alloc(spa_t *spa, vdev_t **vdp, nvlist_t *nv, vdev_t *parent, uint_t id,
 			return (rc);
 		}
 	}
-
+	zfs_dbgmsg("<3>");
 	vd = vdev_alloc_common(spa, id, guid, ops);
 	vd->vdev_tsd = tsd;
 	vd->vdev_islog = islog;
@@ -826,6 +838,7 @@ vdev_alloc(spa_t *spa, vdev_t **vdp, nvlist_t *nv, vdev_t *parent, uint_t id,
 	if (nvlist_lookup_string(nv, ZPOOL_CONFIG_FRU, &vd->vdev_fru) == 0)
 		vd->vdev_fru = spa_strdup(vd->vdev_fru);
 
+	zfs_dbgmsg("<4>");
 	/*
 	 * Set the whole_disk property.  If it's not specified, leave the value
 	 * as -1.
@@ -899,6 +912,7 @@ vdev_alloc(spa_t *spa, vdev_t **vdp, nvlist_t *nv, vdev_t *parent, uint_t id,
 		ASSERT0(vd->vdev_leaf_zap);
 	}
 
+	zfs_dbgmsg("<5>");
 	/*
 	 * If we're a leaf vdev, try to load the DTL object and other state.
 	 */
@@ -2254,11 +2268,11 @@ vdev_validate(vdev_t *vd)
 		txg = spa_last_synced_txg(spa);
 
 	if ((label = vdev_label_read_config(vd, txg)) == NULL) {
-		vdev_set_state(vd, B_FALSE, VDEV_STATE_CANT_OPEN,
-		    VDEV_AUX_BAD_LABEL);
+		//vdev_set_state(vd, B_FALSE, VDEV_STATE_CANT_OPEN,
+		    //VDEV_AUX_BAD_LABEL);
 		vdev_dbgmsg(vd, "vdev_validate: failed reading config for "
 		    "txg %llu", (u_longlong_t)txg);
-		return (0);
+		return (77);
 	}
 
 	/*
@@ -2607,10 +2621,11 @@ vdev_rele(vdev_t *vd)
  * on the spa_config_lock.  Instead we only obtain the leaf's physical size.
  * If the leaf has never been opened then open it, as usual.
  */
-void
+int
 vdev_reopen(vdev_t *vd)
 {
 	spa_t *spa = vd->vdev_spa;
+	int err = 0;
 
 	ASSERT(spa_config_held(spa, SCL_STATE_ALL, RW_WRITER) == SCL_STATE_ALL);
 
@@ -2642,7 +2657,7 @@ vdev_reopen(vdev_t *vd)
 			spa_async_request(spa, SPA_ASYNC_L2CACHE_TRIM);
 		}
 	} else {
-		(void) vdev_validate(vd);
+		err = vdev_validate(vd);
 	}
 
 	/*
@@ -2660,6 +2675,9 @@ vdev_reopen(vdev_t *vd)
 	 * Reassess parent vdev's health.
 	 */
 	vdev_propagate_state(vd);
+		
+	zfs_dbgmsg("%d", err);
+	return err;
 }
 
 int
@@ -3877,6 +3895,7 @@ vdev_psize_to_asize(vdev_t *vd, uint64_t psize)
 int
 vdev_fault(spa_t *spa, uint64_t guid, vdev_aux_t aux)
 {
+	zfs_dbgmsg("vdev_fault called");
 	vdev_t *vd, *tvd;
 
 	spa_vdev_state_enter(spa, SCL_NONE);
@@ -3926,17 +3945,17 @@ vdev_fault(spa_t *spa, uint64_t guid, vdev_aux_t aux)
 	 * Faulted state takes precedence over degraded.
 	 */
 	vd->vdev_delayed_close = B_FALSE;
-	vd->vdev_faulted = 1ULL;
-	vd->vdev_degraded = 0ULL;
-	vdev_set_state(vd, B_FALSE, VDEV_STATE_FAULTED, aux);
+	// vd->vdev_faulted = 1ULL;
+	// vd->vdev_degraded = 0ULL;
+	// vdev_set_state(vd, B_FALSE, VDEV_STATE_FAULTED, aux);
 
 	/*
 	 * If this device has the only valid copy of the data, then
 	 * back off and simply mark the vdev as degraded instead.
 	 */
 	if (!tvd->vdev_islog && vd->vdev_aux == NULL && vdev_dtl_required(vd)) {
-		vd->vdev_degraded = 1ULL;
-		vd->vdev_faulted = 0ULL;
+		// vd->vdev_degraded = 1ULL;
+		// vd->vdev_faulted = 0ULL;
 
 		/*
 		 * If we reopen the device and it's not dead, only then do we
@@ -5093,6 +5112,7 @@ vdev_propagate_state(vdev_t *vd)
 void
 vdev_set_state(vdev_t *vd, boolean_t isopen, vdev_state_t state, vdev_aux_t aux)
 {
+	zfs_dbgmsg("vdev_set_state called with state %d", state);
 	uint64_t save_state;
 	spa_t *spa = vd->vdev_spa;
 

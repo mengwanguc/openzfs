@@ -1,0 +1,101 @@
+timestamp    message 
+1697602047   vdev.c:718:vdev_alloc(): get ops sucessful
+1697602047   vdev.c:744:vdev_alloc(): <2>
+1697602047   vdev.c:745:vdev_alloc(): root
+1697602047   vdev.c:752:vdev_alloc(): non-root
+1697602047   vdev.c:764:vdev_alloc(): next step
+1697602047   vdev.c:792:vdev_alloc(): <2.5>
+1697602047   vdev.c:805:vdev_alloc(): <3>
+1697602047   vdev.c:841:vdev_alloc(): <4>
+1697602047   vdev.c:915:vdev_alloc(): <5>
+1697602047   vdev.c:718:vdev_alloc(): get ops sucessful
+1697602047   vdev.c:744:vdev_alloc(): <2>
+1697602047   vdev.c:745:vdev_alloc(): raidz
+1697602047   vdev.c:752:vdev_alloc(): non-root
+1697602047   vdev.c:764:vdev_alloc(): next step
+1697602047   vdev.c:792:vdev_alloc(): <2.5>
+1697602047   vdev.c:805:vdev_alloc(): <3>
+1697602047   vdev.c:841:vdev_alloc(): <4>
+1697602047   vdev.c:915:vdev_alloc(): <5>
+1697602047   vdev.c:718:vdev_alloc(): get ops sucessful
+1697602047   vdev.c:744:vdev_alloc(): <2>
+1697602047   vdev.c:745:vdev_alloc(): file
+1697602047   vdev.c:752:vdev_alloc(): non-root
+1697602047   vdev.c:764:vdev_alloc(): next step
+1697602047   vdev.c:792:vdev_alloc(): <2.5>
+1697602047   vdev.c:805:vdev_alloc(): <3>
+1697602047   vdev.c:841:vdev_alloc(): <4>
+1697602047   vdev.c:915:vdev_alloc(): <5>
+1697602047   vdev.c:718:vdev_alloc(): get ops sucessful
+1697602047   vdev.c:744:vdev_alloc(): <2>
+1697602047   vdev.c:745:vdev_alloc(): file
+1697602047   vdev.c:752:vdev_alloc(): non-root
+1697602047   vdev.c:764:vdev_alloc(): next step
+1697602047   vdev.c:792:vdev_alloc(): <2.5>
+1697602047   vdev.c:805:vdev_alloc(): <3>
+1697602047   vdev.c:841:vdev_alloc(): <4>
+1697602047   vdev.c:915:vdev_alloc(): <5>
+1697602047   vdev.c:718:vdev_alloc(): get ops sucessful
+1697602047   vdev.c:744:vdev_alloc(): <2>
+1697602047   vdev.c:745:vdev_alloc(): file
+1697602047   vdev.c:752:vdev_alloc(): non-root
+1697602047   vdev.c:764:vdev_alloc(): next step
+1697602047   vdev.c:792:vdev_alloc(): <2.5>
+1697602047   vdev.c:805:vdev_alloc(): <3>
+1697602047   vdev.c:841:vdev_alloc(): <4>
+1697602047   vdev.c:915:vdev_alloc(): <5>
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 create pool version 5000; software version zfs-2.1.12-10-g4216685f9; uts mlec-vm 5.15.0-86-generic #96-Ubuntu SMP Wed Sep 20 08:23:49 UTC 2023 x86_64
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@async_destroy=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@empty_bpobj=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@lz4_compress=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@multi_vdev_crash_dump=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@spacemap_histogram=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@enabled_txg=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@hole_birth=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@extensible_dataset=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@embedded_data=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@bookmarks=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@filesystem_limits=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@large_blocks=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@large_dnode=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@sha512=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@skein=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@edonr=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@userobj_accounting=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@encryption=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@project_quota=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@device_removal=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@obsolete_counts=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@zpool_checkpoint=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@spacemap_v2=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@allocation_classes=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@resilver_defer=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@bookmark_v2=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@redaction_bookmarks=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@redacted_datasets=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@bookmark_written=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@log_spacemap=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@livelist=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@device_rebuild=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@zstd_compress=enabled
+1697602047   spa_history.c:307:spa_history_log_sync(): txg 4 set feature@draid=enabled
+1697602047   mmp.c:240:mmp_thread_start(): MMP thread started pool 'test' gethrtime 1528497219260
+1697602047   metaslab.c:2437:metaslab_load_impl(): metaslab_load: txg 4, spa test, vdev_id 0, ms_id 0, smp_length 0, unflushed_allocs 0, unflushed_frees 0, freed 0, defer 0 + 0, unloaded time 1528497 ms, loading_time 0 ms, ms_max_size 536870912, max size error 536870912, old_weight 1000000040000000, new_weight 740000000000001
+1697602047   metaslab.c:2437:metaslab_load_impl(): metaslab_load: txg 4, spa test, vdev_id 0, ms_id 1, smp_length 0, unflushed_allocs 0, unflushed_frees 0, freed 0, defer 0 + 0, unloaded time 1528497 ms, loading_time 0 ms, ms_max_size 536870912, max size error 536870912, old_weight 100000003e9bd37b, new_weight 740000000000001
+1697602047   metaslab.c:2437:metaslab_load_impl(): metaslab_load: txg 4, spa test, vdev_id 0, ms_id 2, smp_length 0, unflushed_allocs 0, unflushed_frees 0, freed 0, defer 0 + 0, unloaded time 1528497 ms, loading_time 0 ms, ms_max_size 536870912, max size error 536870912, old_weight 100000003d37a6f5, new_weight 740000000000001
+1697602047   metaslab.c:2437:metaslab_load_impl(): metaslab_load: txg 4, spa test, vdev_id 0, ms_id 3, smp_length 0, unflushed_allocs 0, unflushed_frees 0, freed 0, defer 0 + 0, unloaded time 1528497 ms, loading_time 0 ms, ms_max_size 536870912, max size error 536870912, old_weight 100000003bd37a70, new_weight 740000000000001
+1697602047   metaslab.c:2437:metaslab_load_impl(): metaslab_load: txg 4, spa test, vdev_id 0, ms_id 4, smp_length 0, unflushed_allocs 0, unflushed_frees 0, freed 0, defer 0 + 0, unloaded time 1528497 ms, loading_time 0 ms, ms_max_size 536870912, max size error 536870912, old_weight 100000003a6f4dea, new_weight 740000000000001
+1697602047   metaslab.c:2437:metaslab_load_impl(): metaslab_load: txg 4, spa test, vdev_id 0, ms_id 5, smp_length 0, unflushed_allocs 0, unflushed_frees 0, freed 0, defer 0 + 0, unloaded time 1528497 ms, loading_time 0 ms, ms_max_size 536870912, max size error 536870912, old_weight 10000000390b2165, new_weight 740000000000001
+1697602047   metaslab.c:2437:metaslab_load_impl(): metaslab_load: txg 4, spa test, vdev_id 0, ms_id 6, smp_length 0, unflushed_allocs 0, unflushed_frees 0, freed 0, defer 0 + 0, unloaded time 1528497 ms, loading_time 0 ms, ms_max_size 536870912, max size error 536870912, old_weight 1000000037a6f4df, new_weight 740000000000001
+1697602047   metaslab.c:2437:metaslab_load_impl(): metaslab_load: txg 4, spa test, vdev_id 0, ms_id 7, smp_length 0, unflushed_allocs 0, unflushed_frees 0, freed 0, defer 0 + 0, unloaded time 1528497 ms, loading_time 0 ms, ms_max_size 536870912, max size error 536870912, old_weight 100000003642c85a, new_weight 740000000000001
+1697602047   metaslab.c:2437:metaslab_load_impl(): metaslab_load: txg 4, spa test, vdev_id 0, ms_id 8, smp_length 0, unflushed_allocs 0, unflushed_frees 0, freed 0, defer 0 + 0, unloaded time 1528498 ms, loading_time 0 ms, ms_max_size 536870912, max size error 536870912, old_weight 1000000034de9bd4, new_weight 740000000000001
+1697602047   metaslab.c:2437:metaslab_load_impl(): metaslab_load: txg 4, spa test, vdev_id 0, ms_id 9, smp_length 0, unflushed_allocs 0, unflushed_frees 0, freed 0, defer 0 + 0, unloaded time 1528532 ms, loading_time 0 ms, ms_max_size 536870912, max size error 536870912, old_weight 740000000000001, new_weight 740000000000001
+1697602047   metaslab.c:2437:metaslab_load_impl(): metaslab_load: txg 4, spa test, vdev_id 0, ms_id 10, smp_length 0, unflushed_allocs 0, unflushed_frees 0, freed 0, defer 0 + 0, unloaded time 1528532 ms, loading_time 0 ms, ms_max_size 536870912, max size error 536870912, old_weight 740000000000001, new_weight 740000000000001
+1697602047   metaslab.c:2437:metaslab_load_impl(): metaslab_load: txg 4, spa test, vdev_id 0, ms_id 11, smp_length 0, unflushed_allocs 0, unflushed_frees 0, freed 0, defer 0 + 0, unloaded time 1528532 ms, loading_time 0 ms, ms_max_size 536870912, max size error 536870912, old_weight 740000000000001, new_weight 740000000000001
+1697602047   metaslab.c:2437:metaslab_load_impl(): metaslab_load: txg 4, spa test, vdev_id 0, ms_id 12, smp_length 0, unflushed_allocs 0, unflushed_frees 0, freed 0, defer 0 + 0, unloaded time 1528532 ms, loading_time 0 ms, ms_max_size 536870912, max size error 536870912, old_weight 740000000000001, new_weight 740000000000001
+1697602047   metaslab.c:2437:metaslab_load_impl(): metaslab_load: txg 4, spa test, vdev_id 0, ms_id 13, smp_length 0, unflushed_allocs 0, unflushed_frees 0, freed 0, defer 0 + 0, unloaded time 1528532 ms, loading_time 0 ms, ms_max_size 536870912, max size error 536870912, old_weight 740000000000001, new_weight 740000000000001
+1697602047   metaslab.c:2437:metaslab_load_impl(): metaslab_load: txg 4, spa test, vdev_id 0, ms_id 14, smp_length 0, unflushed_allocs 0, unflushed_frees 0, freed 0, defer 0 + 0, unloaded time 1528532 ms, loading_time 0 ms, ms_max_size 536870912, max size error 536870912, old_weight 740000000000001, new_weight 740000000000001
+1697602047   metaslab.c:2437:metaslab_load_impl(): metaslab_load: txg 4, spa test, vdev_id 0, ms_id 15, smp_length 0, unflushed_allocs 0, unflushed_frees 0, freed 0, defer 0 + 0, unloaded time 1528532 ms, loading_time 0 ms, ms_max_size 536870912, max size error 536870912, old_weight 740000000000001, new_weight 740000000000001
+1697602047   metaslab.c:2437:metaslab_load_impl(): metaslab_load: txg 4, spa test, vdev_id 0, ms_id 16, smp_length 0, unflushed_allocs 0, unflushed_frees 0, freed 0, defer 0 + 0, unloaded time 1528532 ms, loading_time 0 ms, ms_max_size 536870912, max size error 536870912, old_weight 740000000000001, new_weight 740000000000001
+1697602047   metaslab.c:2437:metaslab_load_impl(): metaslab_load: txg 4, spa test, vdev_id 0, ms_id 17, smp_length 0, unflushed_allocs 0, unflushed_frees 0, freed 0, defer 0 + 0, unloaded time 1528532 ms, loading_time 0 ms, ms_max_size 536870912, max size error 536870912, old_weight 740000000000001, new_weight 740000000000001
+1697602047   spa_history.c:294:spa_history_log_sync(): command: zpool create test raidz /scratch/1.img /scratch/2.img /scratch/3.img

@@ -47,6 +47,7 @@ get_zfs_ioctl_version(void)
 static int
 zcmd_ioctl_compat(int fd, int request, zfs_cmd_t *zc, const int cflag)
 {
+	printf("zcmd_ioctl_compat() called\n");
 	int newrequest, ret;
 	void *zc_c = NULL;
 	unsigned long ncmd;
@@ -94,11 +95,14 @@ zcmd_ioctl_compat(int fd, int request, zfs_cmd_t *zc, const int cflag)
 int
 zfs_ioctl_fd(int fd, unsigned long request, zfs_cmd_t *zc)
 {
+	printf("zfs_ioctl_fd() called\n");
 	size_t oldsize;
 	int ret, cflag = ZFS_CMD_COMPAT_NONE;
-
+	
 	if (zfs_ioctl_version == ZFS_IOCVER_UNDEF)
 		zfs_ioctl_version = get_zfs_ioctl_version();
+
+	printf("zfs_ioctl_fd() wtih version %d\n", zfs_ioctl_version);
 
 	switch (zfs_ioctl_version) {
 		case ZFS_IOCVER_LEGACY:
@@ -113,9 +117,11 @@ zfs_ioctl_fd(int fd, unsigned long request, zfs_cmd_t *zc)
 	}
 
 	oldsize = zc->zc_nvlist_dst_size;
+	printf("Calling zcmd_ioctl_compat()\n");
 	ret = zcmd_ioctl_compat(fd, request, zc, cflag);
 
 	if (ret == 0 && oldsize < zc->zc_nvlist_dst_size) {
+		printf("Wrong size!");
 		ret = -1;
 		errno = ENOMEM;
 	}

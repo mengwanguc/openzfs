@@ -505,6 +505,11 @@ struct zio {
 
 	/* Taskq dispatching state */
 	taskq_ent_t	io_tqent;
+
+	/* MLEC stuff */
+	char test_tag[20];
+	blkptr_t *mlec_write_target;
+	uint64_t mlec_write_col_idx;
 };
 
 enum blk_verify_flag {

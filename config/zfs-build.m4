@@ -14,7 +14,7 @@ AC_DEFUN([ZFS_AC_DEBUG_ENABLE], [
 	WITH_DEBUG="true"
 	AC_DEFINE(ZFS_DEBUG, 1, [zfs debugging enabled])
 
-	KERNEL_DEBUG_CFLAGS="-Werror"
+	# KERNEL_DEBUG_CFLAGS="-Werror -Wno-error=vla"
 	KERNEL_DEBUG_CPPFLAGS="-DDEBUG -UNDEBUG"
 ])
 

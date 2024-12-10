@@ -3378,13 +3378,6 @@ dump_object(objset_t *os, uint64_t object, int verbosity,
 	CTASSERT(sizeof (asize) >= NN_NUMBUF_SZ);
 	CTASSERT(sizeof (bonus_size) >= NN_NUMBUF_SZ);
 
-	if (*print_header) {
-		(void) printf("\n%10s  %3s  %5s  %5s  %5s  %6s  %5s  %6s  %s\n",
-		    "Object", "lvl", "iblk", "dblk", "dsize", "dnsize",
-		    "lsize", "%full", "type");
-		*print_header = 0;
-	}
-
 	if (object == 0) {
 		dn = DMU_META_DNODE(os);
 		dmu_object_info_from_dnode(dn, &doi);
@@ -3413,6 +3406,15 @@ dump_object(objset_t *os, uint64_t object, int verbosity,
 			bsize = db->db_size;
 			dn = DB_DNODE((dmu_buf_impl_t *)db);
 		}
+
+		// printf("dump_object() <objset_id:dnode_id> <%ld:%ld>\n", dmu_objset_id(os), dn->dn_object);
+	}
+
+	if (*print_header) {
+		(void) printf("\n%10s  %3s  %5s  %5s  %5s  %6s  %5s  %6s  %s\n",
+		    "Object", "lvl", "iblk", "dblk", "dsize", "dnsize",
+		    "lsize", "%full", "type");
+		*print_header = 0;
 	}
 
 	/*
@@ -4551,6 +4553,7 @@ dump_path_impl(objset_t *os, uint64_t obj, char *name, uint64_t *retobj)
 	err = zap_lookup(os, obj, name, 8, 1, &child_obj);
 
 	(void) strlcat(curpath, name, sizeof (curpath));
+	// printf("Current dump path %s, child obj %ld\n", curpath, child_obj);
 
 	if (err != 0) {
 		(void) fprintf(stderr, "failed to lookup %s: %s\n",
@@ -4560,12 +4563,14 @@ dump_path_impl(objset_t *os, uint64_t obj, char *name, uint64_t *retobj)
 
 	child_obj = ZFS_DIRENT_OBJ(child_obj);
 	err = sa_buf_hold(os, child_obj, FTAG, &db);
+
 	if (err != 0) {
 		(void) fprintf(stderr,
 		    "failed to get SA dbuf for obj %llu: %s\n",
 		    (u_longlong_t)child_obj, strerror(err));
 		return (EINVAL);
 	}
+
 	dmu_object_info_from_db(db, &doi);
 	sa_buf_rele(db, FTAG);
 
@@ -8778,6 +8783,7 @@ retry_lookup:
 		flagbits['A'] = ZOR_FLAG_ALL_TYPES;
 
 		if (argc > 0 && dump_opt['d']) {
+			printf("Dump option [d]");
 			zopt_object_args = argc;
 			zopt_object_ranges = calloc(zopt_object_args,
 			    sizeof (zopt_object_range_t));

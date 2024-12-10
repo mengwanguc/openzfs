@@ -1419,6 +1419,7 @@ dnode_hold_impl(objset_t *os, uint64_t object, int flag, int slots,
 	 * which may require us to read from the root filesystem while
 	 * holding some (not all) of the locks as writer.
 	 */
+	zfs_dbgmsg("spa_config_held %d", spa_config_held(os->os_spa, SCL_ALL, RW_WRITER));
 	ASSERT(spa_config_held(os->os_spa, SCL_ALL, RW_WRITER) == 0 ||
 	    (spa_is_root(os->os_spa) &&
 	    spa_config_held(os->os_spa, SCL_STATE, RW_WRITER)));
@@ -1710,6 +1711,8 @@ dnode_add_ref(dnode_t *dn, void *tag)
 		mutex_exit(&dn->dn_mtx);
 		return (FALSE);
 	}
+
+	// zfs_dbgmsg("dnode ref count %lld", dn->dn_holds.rc_count);
 	VERIFY(1 < zfs_refcount_add(&dn->dn_holds, tag));
 	mutex_exit(&dn->dn_mtx);
 	return (TRUE);

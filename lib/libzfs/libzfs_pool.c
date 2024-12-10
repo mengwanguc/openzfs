@@ -2555,6 +2555,178 @@ zpool_scan(zpool_handle_t *zhp, pool_scan_func_t func, pool_scrub_cmd_t cmd)
 	}
 }
 
+int
+zpool_get_failed_chunks(zpool_handle_t *zhp, int64_t objset_id, int64_t object_id) {
+	zfs_cmd_t zc;
+	libzfs_handle_t *hdl = zhp->zpool_hdl;
+
+	// printf("zpool_get_failed_chunks\n");
+
+	// Copy the zc name
+	(void) strlcpy(zc.zc_name, zhp->zpool_name, sizeof (zc.zc_name));
+	
+	// // Configure input
+	// nvlist_t *input;
+	// nvlist_alloc(&input, NV_UNIQUE_NAME, 0);
+	// nvlist_add_uint64(input, "objset_id", objset_id);
+
+	// printf("=====\n");
+	// size_t nvsz;
+	// int err = nvlist_size(input, &nvsz, NV_ENCODE_NATIVE);
+	// assert(err == 0);
+
+	// char *nvbuf = malloc(nvsz);
+
+	// err = nvlist_pack(input, &nvbuf, &nvsz, NV_ENCODE_NATIVE, 0);
+	// assert(err == 0);
+
+	// zc.zc_nvlist_src_size = nvsz;
+	// zc.zc_nvlist_src = (uintptr_t)nvbuf;
+
+	// Set output size
+	// TODO: fix this excessive memory allocation
+	zc.zc_nvlist_dst_size = 60000;
+	zc.zc_nvlist_dst = (uint64_t)(uintptr_t)zfs_alloc(hdl, zc.zc_nvlist_dst_size);
+
+	errno = 0;
+	errno = zfs_ioctl(hdl, ZFS_IOC_POOL_FAILED_CHUNKS, &zc);
+
+	// printf("Error no %d\n", errno);
+
+	nvlist_t *out;
+	nvlist_alloc(&out, NV_UNIQUE_NAME, 0);
+
+	int error = 0;
+	error = nvlist_unpack((char *)zc.zc_nvlist_dst, zc.zc_nvlist_dst_size, &out, 0);
+	if (error) {
+		printf("Error unpacking %d\n", error);
+	}
+
+	// nvpair_t *pair;
+	// while ((pair = nvlist_next_nvpair(out, pair)) != NULL) {
+	// 	// Get the attributes
+	// 	char *dnode_id_str = nvpair_name(pair);
+	// 	uint64_t dnode_id = atoi(dnode_id_str);
+	// 	printf("dnode %ld\n", dnode_id);
+	// }
+
+	// nvlist_free(input);
+	nvlist_free(out);
+
+	return 0;
+}
+
+int
+zpool_get_all_dnode(zpool_handle_t *zhp) {
+	zfs_cmd_t zc;
+	libzfs_handle_t *hdl = zhp->zpool_hdl;
+
+	// Copy the zc name
+	(void) strlcpy(zc.zc_name, zhp->zpool_name, sizeof (zc.zc_name));
+	
+	// Set output size
+	// TODO: fix this excessive memory allocation
+	zc.zc_nvlist_dst_size = 6000;
+	zc.zc_nvlist_dst = (uint64_t)(uintptr_t)zfs_alloc(hdl, zc.zc_nvlist_dst_size);
+
+	errno = 0;
+	errno = zfs_ioctl(hdl, ZFS_IOC_POOL_ALL_DNODE, &zc);
+
+	// printf("Error no %d\n", errno);
+	// Read the nvlist
+
+	nvlist_t *out;
+	nvlist_alloc(&out, NV_UNIQUE_NAME, 0);
+
+	int error = 0;
+	error = nvlist_unpack((char *)zc.zc_nvlist_dst, zc.zc_nvlist_dst_size, &out, 0);
+	if (error) {
+		printf("Get all dnode error unpacking %d\n", error);
+	}
+
+	nvpair_t *nvp = NULL;
+	while ((nvp = nvlist_next_nvpair(out, nvp)) != NULL) {
+		printf("Datanode name %s\n", nvpair_name(nvp));
+		// Get the nested nvlist attributes
+		nvlist_t *temp_attributes;
+		nvlist_alloc(&temp_attributes, NV_UNIQUE_NAME, 0);
+		nvpair_value_nvlist(nvp, &temp_attributes);
+		
+		int64_t objset, object, type;
+		char *path;
+		nvlist_lookup_int64(temp_attributes, "objset", &objset);
+		nvlist_lookup_int64(temp_attributes, "object", &object);
+		nvlist_lookup_int64(temp_attributes, "type", &type);
+		nvlist_lookup_string(temp_attributes, "path", &path);
+		printf("dnode %ld:%ld, type %ld, path %s\n", objset, object, type, path);
+
+		nvlist_free(temp_attributes);
+	}
+
+	nvlist_free(out);
+
+	return 0;
+}
+
+/* Easy Zpool scan for easy scrub. */
+int
+zpool_easy_scan(zpool_handle_t *zhp)
+{
+	zfs_cmd_t zc;
+	libzfs_handle_t *hdl = zhp->zpool_hdl;
+
+	// Copy the zc name
+	(void) strlcpy(zc.zc_name, zhp->zpool_name, sizeof (zc.zc_name));
+
+	// Set output size
+	// TODO: fix this excessive memory allocation
+	zc.zc_nvlist_dst_size = 200;
+	zc.zc_nvlist_dst = (uint64_t)(uintptr_t)zfs_alloc(hdl, zc.zc_nvlist_dst_size);
+
+	errno = 0;
+	errno = zfs_ioctl(hdl, ZFS_IOC_POOL_EASY_SCAN, &zc);
+
+	// printf("Error no %d\n", errno);
+	// Read the nvlist
+
+	nvlist_t *out;
+	nvlist_alloc(&out, NV_UNIQUE_NAME, 0);
+
+	int error = 0;
+	error = nvlist_unpack((char *)zc.zc_nvlist_dst, zc.zc_nvlist_dst_size, &out, 0);
+	if (error) {
+		printf("Error unpacking %d\n", error);
+	}
+
+	int64_t *child_status;
+	uint_t actual_len;
+
+	int64_t num_children;
+	nvlist_lookup_int64(out, "children", &num_children);
+	printf("Num children %ld\n", num_children );
+
+	error = nvlist_lookup_int64_array(out, "children_status", &child_status, &actual_len);
+	// error = nvlist_lookup_int16_array(out, "children_status", child_status, 3);
+	if (error) {
+		printf("Error while looking up out nvlist, error %d\n", error);
+	} else {
+		printf("Got %d elems\n", actual_len);
+	}
+
+	for (int i = 0; i < 3; i++) {
+		printf("%ld ", child_status[i]);
+	}
+	printf("\n");
+
+	if (errno) {
+		printf("easy scrub detect disk failures for %s\n", zc.zc_name);
+	}
+
+	nvlist_free(out);
+
+	return 0;
+}
+
 /*
  * Find a vdev that matches the search criteria specified. We use the
  * the nvpair name to determine how we should look for the device.

@@ -201,6 +201,7 @@ libzfs_error_init(int error)
 int
 zfs_ioctl(libzfs_handle_t *hdl, int request, zfs_cmd_t *zc)
 {
+	printf("Calling zfs_ioctl_fd");
 	return (zfs_ioctl_fd(hdl->libzfs_fd, request, zc));
 }
 

@@ -209,6 +209,8 @@ vdev_file_io_strategy(void *arg)
 	size = zio->io_size;
 	resid = 0;
 
+	zfs_dbgmsg("file dev %s write at offset %llu, size %ld", vd->vdev_path, (u_longlong_t)off, size);
+
 	if (zio->io_type == ZIO_TYPE_READ) {
 		buf = abd_borrow_buf(zio->io_abd, zio->io_size);
 		err = zfs_file_pread(vf->vf_file, buf, size, off, &resid);
@@ -239,6 +241,7 @@ vdev_file_io_fsync(void *arg)
 static void
 vdev_file_io_start(zio_t *zio)
 {
+	zfs_dbgmsg("vdev_file_io_start called");
 	vdev_t *vd = zio->io_vd;
 	vdev_file_t *vf = vd->vdev_tsd;
 

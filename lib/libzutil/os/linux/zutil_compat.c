@@ -26,5 +26,6 @@
 int
 zfs_ioctl_fd(int fd, unsigned long request, zfs_cmd_t *zc)
 {
+	// printf("zfs_ioctl_fd() for OS Linux called with fd %d and %s\n", fd, zc->zc_name);
 	return (ioctl(fd, request, zc));
 }

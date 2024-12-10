@@ -172,6 +172,7 @@ static int
 lzc_ioctl(zfs_ioc_t ioc, const char *name,
     nvlist_t *source, nvlist_t **resultp)
 {
+	// printf("lzc_ioctl called with %s and gfd %d\n", name, g_fd);
 	zfs_cmd_t zc = {"\0"};
 	int error = 0;
 	char *packed = NULL;
@@ -210,6 +211,7 @@ lzc_ioctl(zfs_ioc_t ioc, const char *name,
 		}
 	}
 
+	// printf("Calling zfs_ioctl_fd()\n");
 	while (zfs_ioctl_fd(g_fd, ioc, &zc) != 0) {
 		/*
 		 * If ioctl exited with ENOMEM, we retry the ioctl after
@@ -1640,4 +1642,24 @@ int
 lzc_get_bootenv(const char *pool, nvlist_t **outnvl)
 {
 	return (lzc_ioctl(ZFS_IOC_GET_BOOTENV, pool, NULL, outnvl));
+}
+
+/*
+* A test method for MLEC impl
+*/
+int
+lzc_mlec_receive_data(const char *pool, nvlist_t *input) 
+{
+	return (lzc_ioctl(ZFS_MLEC_RECEIVE_DATA, pool, input, NULL));
+}
+
+int lzc_mlec_get_failed_chunks(const char *pool, nvlist_t *input, nvlist_t **output) {
+	return (lzc_ioctl(ZFS_IOC_POOL_FAILED_CHUNKS, pool, input, output));
+}
+
+/**
+ * MLEC get all dnode
+ */
+int lzc_mlec_get_all_dnode(const char *pool, nvlist_t *input, nvlist_t **output) {
+	return (lzc_ioctl(ZFS_IOC_POOL_ALL_DNODE, pool, input, output));
 }
